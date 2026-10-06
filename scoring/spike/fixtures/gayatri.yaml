@@ -1,0 +1,5 @@
+# SPIKE FIXTURE ONLY — not seed content. Text must be re-checked against an
+# open-corpus source (RV 3.62.10 via GRETIL; vyāhṛti prefix via a Yajurveda
+# source) and verified by the advisor in Milestone 1.
+slug: gayatri-mantra
+words: [oṃ, bhūr, bhuvaḥ, svaḥ, tat, savitur, vareṇyaṃ, bhargo, devasya, dhīmahi, dhiyo, yo, naḥ, pracodayāt]

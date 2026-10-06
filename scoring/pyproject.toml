@@ -1,0 +1,41 @@
+[project]
+name = "vv-scoring"
+version = "0.1.0"
+description = "Vedic Voice pronunciation scoring: compare a chant to a reference at word level"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy>=2.0",
+  "scipy>=1.13",
+  "librosa>=0.10.2",
+  "soundfile>=0.12",
+  "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vv_scoring"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Frozen dataclasses are safe as defaults.
+extend-immutable-calls = ["vv_scoring.scorers.dtw.Calibration", "vv_scoring.synth.Speaker"]
+
+[tool.ruff.lint.per-file-ignores]
+"spike/review.py" = ["E501"]  # embedded CSS/HTML templates
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::FutureWarning"]
