@@ -1,0 +1,76 @@
+# Candidate public test recordings for the Milestone 0 scoring spike.
+#
+# Why this file exists: CLAUDE.md requires every public recording used for
+# testing to carry a recorded license and attribution. Metadata was pulled
+# from the Wikimedia Commons API on 2026-10-06. Audio is NOT committed;
+# the spike harness downloads by `url` and checks `sha1` (Commons' hash).
+#
+# `use` says how the spike may use the file:
+#   reference  - clean, complete chant of the target shloka
+#   test       - extra rendition to score against a reference
+#   review     - must be listened to first (content/segment unknown)
+
+recordings:
+  - id: gayatri-wilfredor
+    shloka: gayatri
+    use: reference
+    url: https://upload.wikimedia.org/wikipedia/commons/1/11/Gayatri_mantra.ogg
+    page: https://commons.wikimedia.org/wiki/File:Gayatri_mantra.ogg
+    sha1: 76843c1d09b7c69e6c364e0f9efe0574579f9d0a
+    license: CC0-1.0
+    license_url: https://creativecommons.org/publicdomain/zero/1.0/
+    attribution: Wilfredor, Wikimedia Commons
+
+  - id: gayatri-rameshvar-2021
+    shloka: gayatri
+    use: test
+    url: https://upload.wikimedia.org/wikipedia/commons/e/e4/Gayatri_Mantra_as_it_is_2021_02_13_05_48_%2B.wav
+    page: https://commons.wikimedia.org/wiki/File:Gayatri_Mantra_as_it_is_2021_02_13_05_48_%2B.wav
+    sha1: 17e2ef5c3d56da357316330ba2cbb061a5c47af2
+    license: CC0-1.0
+    license_url: https://creativecommons.org/publicdomain/zero/1.0/
+    attribution: Rameshvar, Wikimedia Commons
+    notes: Chanted with Vedic svaras (useful for the swara measurement).
+
+  - id: gayatri-rameshvar
+    shloka: gayatri
+    use: test
+    url: https://upload.wikimedia.org/wikipedia/commons/2/20/Gayatri_Mantra_as_it_is.ogg
+    page: https://commons.wikimedia.org/wiki/File:Gayatri_Mantra_as_it_is.ogg
+    sha1: 380288e44cf38ee2a427ef38537d9493feb69f7d
+    license: FAL-1.3
+    license_url: https://artlibre.org/licence/lal/en
+    attribution: Rameshvar, Wikimedia Commons
+    notes: Free Art License (copyleft, attribution) - acceptable for testing; flag before any redistribution.
+
+  - id: mahamrityunjaya-rameshvar
+    shloka: mahamrityunjaya
+    use: reference
+    url: https://upload.wikimedia.org/wikipedia/commons/4/45/Mrityunjaya.ogg
+    page: https://commons.wikimedia.org/wiki/File:Mrityunjaya.ogg
+    sha1: 4e757140cfa94b2652b77a02ef97d12a8d6746e0
+    license: FAL-1.3
+    license_url: https://artlibre.org/licence/lal/en
+    attribution: Rameshvar, Wikimedia Commons
+
+  - id: guru-stotram-atmananda
+    shloka: guru-brahma
+    use: review
+    url: https://upload.wikimedia.org/wikipedia/commons/f/ff/Sanskrit_Chanting_Guru_Stotram.ogg
+    page: https://commons.wikimedia.org/wiki/File:Sanskrit_Chanting_Guru_Stotram.ogg
+    sha1: 564f0b2734b1a1034ccbbdf035a75d7f0a098ae1
+    license: CC0-1.0
+    license_url: https://creativecommons.org/publicdomain/zero/1.0/
+    attribution: Swami Atmananda (via archive.org/details/GuruStotramChanting), Wikimedia Commons
+    notes: Full Guru Stotram; "Guru Brahma" verse must be located and trimmed.
+
+  - id: gita-3-1-nehaldave
+    shloka: null  # BG 3.1 - not in the initial 10; same reciter style as BG 2.47 for out-of-set testing
+    use: test
+    url: https://upload.wikimedia.org/wikipedia/commons/4/4e/Gita_c_3_1.wav
+    page: https://commons.wikimedia.org/wiki/File:Gita_c_3_1.wav
+    sha1: 3daeaae01188741eb30419bd346d994be7bf0f0d
+    license: CC-BY-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-sa/4.0
+    attribution: NehalDaveND, Wikimedia Commons
+    notes: Reciter uploaded all of BG chapter 3 (Gita_c_3_*.wav); no chapter 2 found yet.

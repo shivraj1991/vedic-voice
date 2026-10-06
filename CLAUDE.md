@@ -158,7 +158,7 @@ cd app && npm install && npm test && npx expo start
 
 | # | Milestone | Status |
 |---|---|---|
-| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Not started — blocked on network access to model/recording hosts |
+| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | In progress — licensed test recordings listed in `scoring/spike/recordings.yaml`; code blocked: env allowlist lacks pypi.org / files.pythonhosted.org / registry.npmjs.org and HF weight CDN (us.aws.cdn.hf.co) |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Not started |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
@@ -186,6 +186,7 @@ Wikisource and its license.
 | 2026-10-06 | After seeding, the DB is the content source of truth; YAML only seeds the initial 10 | Console edits content; `content_audit` keeps history |
 | 2026-10-06 | Recordings: AAC m4a mono 16 kHz ~32 kbps, ≤60 s, ≤2 MB | Free-tier storage/bandwidth; supported on iOS and Android |
 | 2026-10-06 | Python deps with `uv` | Fast, lockfiles |
+| 2026-10-06 | Spike test audio from Wikimedia Commons (CC0 / CC BY-SA / FAL), manifest with sha1, audio not committed | Only reachable licensed source; FAL (Free Art License) accepted for testing only |
 
 ## Schema draft (implemented in Milestone 1)
 
