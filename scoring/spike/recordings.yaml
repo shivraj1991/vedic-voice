@@ -1,0 +1,58 @@
+# Public, licensed recordings used to test scoring (Milestone 0).
+# Every entry needs a license and attribution (CLAUDE.md content rules).
+# Audio files are downloaded into spike/audio/ (gitignored), never committed.
+#
+# `text` is the IAST as recited (word-separated). `text_source` says where the
+# words come from; verse texts are from GRETIL e-texts (see data/sources.yaml).
+
+datasets:
+  - id: sushrota
+    name: "Su-śrotā Sanskrit ASR Dataset (in_the_wild_test split)"
+    url: https://huggingface.co/datasets/prathoshap/sushrota-sanskrit-asr-data
+    file: data/in_the_wild_test-00000-of-00001.parquet
+    local: sushrota/in_the_wild_test.parquet
+    license: CC-BY-4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    attribution: "Prof. Prathosh A P, Indian Institute of Science, Bengaluru — Su-śrotā Sanskrit ASR Dataset"
+    notes: >
+      Consented in-the-wild user recordings (phones, rooms, varied speakers)
+      reading known Sanskrit texts; Devanagari transcripts. Several speakers
+      per text, so one can serve as the reference for the others.
+
+recordings:
+  - id: commons-gayatri-wilfredor
+    shloka: gayatri
+    file: Gayatri_mantra.ogg
+    url: https://upload.wikimedia.org/wikipedia/commons/1/11/Gayatri_mantra.ogg
+    page: https://commons.wikimedia.org/wiki/File:Gayatri_mantra.ogg
+    license: CC0-1.0
+    attribution: "Wilfredor (The Photographer), Wikimedia Commons"
+    text: "oṃ bhūr bhuvaḥ svaḥ tat savitur vareṇyaṃ bhargo devasya dhīmahi dhiyo yo naḥ pracodayāt"
+    text_source: "RV 3.62.10 (GRETIL, Aufrecht ed.) with the vyāhṛti prefix as commonly recited"
+  - id: commons-gayatri-rameshvar
+    shloka: gayatri
+    file: Gayatri_Mantra_as_it_is.ogg
+    url: https://upload.wikimedia.org/wikipedia/commons/2/20/Gayatri_Mantra_as_it_is.ogg
+    page: https://commons.wikimedia.org/wiki/File:Gayatri_Mantra_as_it_is.ogg
+    license: FAL-1.3  # Free Art License (copyleft, CC BY-SA compatible)
+    attribution: "Rameshvar, Wikimedia Commons"
+    text: "oṃ bhūr bhuvaḥ svaḥ tat savitur vareṇyaṃ bhargo devasya dhīmahi dhiyo yo naḥ pracodayāt"
+    text_source: "RV 3.62.10 (GRETIL, Aufrecht ed.) with the vyāhṛti prefix as commonly recited"
+  - id: commons-mrityunjaya-rameshvar
+    shloka: mahamrityunjaya
+    file: Mrityunjaya.ogg
+    url: https://upload.wikimedia.org/wikipedia/commons/4/45/Mrityunjaya.ogg
+    page: https://commons.wikimedia.org/wiki/File:Mrityunjaya.ogg
+    license: FAL-1.3
+    attribution: "Rameshvar, Wikimedia Commons"
+    text: "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam urvārukam iva bandhanān mṛtyor mukṣīya māmṛtāt"
+    text_source: "RV 7.59.12 (GRETIL, Aufrecht ed.), oṃ prefix as commonly recited"
+  - id: commons-gita-3-1-nehaldave
+    shloka: bg-3-1
+    file: Gita_c_3_1.wav
+    url: https://upload.wikimedia.org/wikipedia/commons/4/4e/Gita_c_3_1.wav
+    page: https://commons.wikimedia.org/wiki/File:Gita_c_3_1.wav
+    license: CC-BY-SA-4.0
+    attribution: "NehalDaveND, Wikimedia Commons"
+    text: "arjuna uvāca jyāyasī cet karmaṇas te matā buddhir janārdana tat kiṃ karmaṇi ghore māṃ niyojayasi keśava"
+    text_source: "Bhagavadgītā 3.1 (GRETIL, BORI critical edition)"

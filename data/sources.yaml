@@ -1,0 +1,57 @@
+# Sources of text, audio and models used by Vedic Voice, with licenses.
+# Mirrors the `sources` table (Milestone 1). Add an entry BEFORE using a source.
+# retrieved_at = date we fetched/checked the license.
+
+texts:
+  - id: gretil-bhagavadgita
+    name: "Bhagavadgītā, GRETIL (BORI critical edition; Tokunaga et al., rev. John Smith)"
+    url: https://gretil.sub.uni-goettingen.de/gretil/1_sanskr/2_epic/mbh/ext/bhgce__u.htm
+    license: "GRETIL terms: 'for reference purposes only; copyright and terms of usage as for source file'"
+    license_url: https://gretil.sub.uni-goettingen.de/gretil.html
+    retrieved_at: 2026-10-06
+    notes: >
+      Used for BG 3.1 test text in the scoring spike. License for redistribution
+      in the app is unclear -> check the TEI source header / ask GRETIL before
+      shipping verse text from this file to learners.
+  - id: gretil-rigveda-aufrecht
+    name: "Ṛgveda-Saṃhitā, GRETIL (Aufrecht ed.; data entry Van Nooten & Holland)"
+    url: https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_Rgveda-edAufrecht.xml
+    license: CC-BY-NC-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+    retrieved_at: 2026-10-06
+    notes: >
+      NON-COMMERCIAL. Fine for the spike and a free MVP, but a paid app or the
+      B2B API would need another source for Gayatri (RV 3.62.10) and
+      Mahāmṛtyuñjaya (RV 7.59.12), e.g. Sanskrit Wikisource (CC BY-SA) or
+      our own advisor-verified transcription of the (public-domain) mantra.
+
+audio:
+  - id: sushrota-asr-data
+    name: "Su-śrotā Sanskrit ASR Dataset (Prof. Prathosh A P, IISc Bengaluru)"
+    url: https://huggingface.co/datasets/prathoshap/sushrota-sanskrit-asr-data
+    license: CC-BY-4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    retrieved_at: 2026-10-06
+    notes: "Test recordings only (in_the_wild_test split). Consented recordings per dataset card."
+  - id: wikimedia-commons-mantras
+    name: "Wikimedia Commons mantra recordings (see scoring/spike/recordings.yaml for per-file license)"
+    url: https://commons.wikimedia.org/wiki/Category:Hindu_mantra_recordings
+    license: "per file: CC0-1.0, FAL-1.3, CC-BY-SA-4.0"
+    retrieved_at: 2026-10-06
+
+models:
+  - id: wav2vec2-xlsr-53-espeak-cv-ft
+    name: "facebook/wav2vec2-xlsr-53-espeak-cv-ft (multilingual IPA phoneme recognition)"
+    url: https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft
+    license: Apache-2.0
+    license_url: https://www.apache.org/licenses/LICENSE-2.0
+    retrieved_at: 2026-10-06
+  - id: wav2vec2-xlsr-53-espeak-cv-ft-onnx
+    name: "qnighy/wav2vec2-xlsr-53-espeak-cv-ft-ONNX (third-party ONNX export of the above)"
+    url: https://huggingface.co/qnighy/wav2vec2-xlsr-53-espeak-cv-ft-ONNX
+    license: Apache-2.0
+    retrieved_at: 2026-10-06
+    notes: >
+      Used in the spike because the PyTorch wheel host was blocked from the dev
+      sandbox. For production, export ONNX ourselves from the facebook
+      checkpoint (scripted, pinned) rather than trusting a third-party export.

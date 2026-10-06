@@ -11,7 +11,7 @@
 *.opus
 *.flac
 scoring/spike/audio/
-scoring/spike/out/
+scoring/spike/out*/
 models/
 .cache/
 
