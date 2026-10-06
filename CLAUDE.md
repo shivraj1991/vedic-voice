@@ -158,7 +158,7 @@ cd app && npm install && npm test && npx expo start
 
 | # | Milestone | Status |
 |---|---|---|
-| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Not started — blocked on network access to model/recording hosts |
+| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Not started — model and recording hosts now reachable; still blocked on `pypi.org` + `files.pythonhosted.org` (no Python deps can be installed). See *Cloud environment network access* |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Not started |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
@@ -171,6 +171,38 @@ Asato mā (BṛU 1.3.28), Oṃ saha nāvavatu (TaitU 2.2.2), Pūrṇamadaḥ (Ī
 BG 2.47, Sarve bhavantu sukhinaḥ, Guru Brahmā, Vakratuṇḍa mahākāya,
 Karāgre vasate. The last four may lack a clean open-corpus source — check
 Wikisource and its license.
+
+## Cloud environment network access
+
+Checked 2026-10-06 from the Claude Code cloud environment (egress allowlist).
+Re-check with `curl -sS -o /dev/null -w "%{http_code}" https://<host>/` before
+starting a milestone that needs network.
+
+| Host | Needed for | Status |
+|---|---|---|
+| `huggingface.co` + `us.aws.cdn.hf.co` (file CDN) | ASR / phoneme models (M0) | ✅ reachable, multi-MB downloads verified |
+| `commons.wikimedia.org`, `upload.wikimedia.org` | Licensed test recordings (M0) | ✅ reachable (API rate-limits fast; send a User-Agent, go slow) |
+| `sa.wikisource.org` | Source texts (M1) | ✅ reachable |
+| `gretil.sub.uni-goettingen.de` | Source texts (M1) | ✅ reachable |
+| `github.com` (git over HTTPS) | Cloning tools/corpora, e.g. DCS data | ✅ `git clone` works |
+| **`pypi.org`, `files.pythonhosted.org`** | `uv sync` for scoring/backend/data | ❌ **blocked — needed now (M0)** |
+| **`registry.npmjs.org`** | `npm install` in `app/` | ❌ **blocked — needed by M3** |
+| `download.pytorch.org` | CPU-only torch wheels (smaller than PyPI's) | ❌ blocked — optional, nice to have for M0 |
+| `raw.githubusercontent.com`, `codeload.github.com` | Single files / zip downloads from GitHub | ❌ blocked — optional (`git clone` works) |
+| `archive.org`, `*.us.archive.org` | More public recordings | ❌ blocked — optional |
+| `titus.uni-frankfurt.de`, `www.sanskrit-linguistics.org` (DCS) | Source texts | ❌ blocked — optional (DCS data is on GitHub) |
+| `en.wikisource.org` | English translations | ❌ blocked — optional |
+| `sanskrit.inria.fr` | Heritage sandhi/morphology tool (M0b candidate) | ❌ blocked — needed only if M0b picks it |
+
+M0 findings so far (no code yet):
+- Candidate models: `facebook/wav2vec2-xlsr-53-espeak-cv-ft` (Apache-2.0,
+  multilingual phoneme CTC) as first choice; `openai/whisper-small`
+  (Apache-2.0) for comparison. Sanskrit fine-tunes on HF
+  (e.g. `Harveenchadha/vakyansh-wav2vec2-sanskrit-sam-60`) declare **no
+  license** → not usable until clarified.
+- Candidate recordings on Commons: `Gayatri Mantra as it is*.ogg/.wav` (CC0)
+  and a Bhagavad Gītā chapter 3 verse series `Gita c 3 *.wav` (CC BY-SA 4.0).
+  Confirm per-file license/attribution when downloading.
 
 ## Decisions log
 
@@ -186,6 +218,8 @@ Wikisource and its license.
 | 2026-10-06 | After seeding, the DB is the content source of truth; YAML only seeds the initial 10 | Console edits content; `content_audit` keeps history |
 | 2026-10-06 | Recordings: AAC m4a mono 16 kHz ~32 kbps, ≤60 s, ≤2 MB | Free-tier storage/bandwidth; supported on iOS and Android |
 | 2026-10-06 | Python deps with `uv` | Fast, lockfiles |
+| 2026-10-06 | Do not use Meta MMS models (`facebook/mms-*`) | License is CC BY-NC 4.0 — non-commercial, incompatible with a paid/B2B product |
+| 2026-10-06 | Do not use HF models without a declared license | Can't verify the right to ship them; SECURITY.md requires recorded licenses |
 
 ## Schema draft (implemented in Milestone 1)
 
