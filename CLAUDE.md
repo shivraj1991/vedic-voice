@@ -164,6 +164,7 @@ cd backend && uv sync && uv run pytest && uv run ruff check . && uv run ruff for
 #   tests: local throwaway Postgres, or DATABASE_URL_TEST = Neon branch (direct URL)
 cd backend && uv run alembic upgrade head                 # DATABASE_URL_MIGRATIONS = Neon branch
 cd backend && uv run python -m vv_backend.seed --dry-run  # then without --dry-run
+cd backend && VV_LIVE_CLERK=1 uv run pytest tests/test_clerk_live.py   # needs *.clerk.accounts.dev allowed
 cd backend && uv run python -m vv_backend.devtools init && uv run python -m vv_backend.devtools token --role advisor
 #   simulated Clerk tokens for local dev; see backend/README.md (refused when VV_ENV=prod)
 
@@ -178,7 +179,7 @@ cd app && npm install && npm test && npx expo start
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16; **run once on a Neon branch** (needs `DATABASE_URL_TEST`) |
-| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); verify a real token once the sandbox may reach `*.clerk.accounts.dev`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
+| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); real JWKS fetched and forged tokens rejected (`VV_LIVE_CLERK=1 pytest tests/test_clerk_live.py`). Still to check with a real sign-in: `role` claim + native `azp`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
 | 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
 | 4 | Progress tracking | Not started |
