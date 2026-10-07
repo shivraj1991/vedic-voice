@@ -1,7 +1,8 @@
 #!/bin/bash
 # Prepare a Claude Code cloud session so tests, linters and spikes run:
 # - scoring/: Python deps, 4-bit phoneme model, Su-śrotā test split
-# - data/:    Python deps, Vidyut data bundle, GRETIL texts
+# - data/:    Python deps, Vidyut data bundle, GRETIL/Wikisource texts
+# - backend/: Python deps (tests start a local PostgreSQL if binaries exist)
 # Idempotent: uv sync is a no-op when locked deps are installed; the fetch
 # scripts skip files that are already present / match their sha256.
 set -euo pipefail
@@ -24,3 +25,6 @@ uv sync --quiet
 if ! uv run --quiet python -m spike.fetch; then
   echo "session-start: data download failed (github.com releases / gretil allowed?)" >&2
 fi
+
+cd "$CLAUDE_PROJECT_DIR/backend"
+uv sync --quiet

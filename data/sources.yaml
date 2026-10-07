@@ -38,6 +38,41 @@ texts:
     license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
     retrieved_at: 2026-10-07
     notes: "Traditional word split for Ṛgveda mantras (Milestone 0b). NON-COMMERCIAL, like the Saṃhitā text."
+  - id: gretil-brhadaranyaka
+    name: "Bṛhadāraṇyaka Upaniṣad (Kāṇva) with Śaṅkara's commentary, GRETIL"
+    url: https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_bRhadAraNyakopaniSadkANva-recension-comm.xml
+    license: CC-BY-NC-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+    retrieved_at: 2026-10-07
+    notes: "Asato mā (BṛU 1.3.28). NON-COMMERCIAL - see TODO(replace-gretil)."
+  - id: gretil-isa
+    name: "Īśa Upaniṣad (Kāṇva) with commentary, GRETIL"
+    url: https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_IzopaniSad-or-IzAvAsyopaniSadkANva-recension-comm.xml
+    license: CC-BY-NC-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+    retrieved_at: 2026-10-07
+    notes: "Pūrṇamadaḥ śānti-pāṭha. NON-COMMERCIAL - see TODO(replace-gretil)."
+  - id: gretil-taittiriya
+    name: "Taittirīya Upaniṣad with Śaṅkara's commentary, GRETIL"
+    url: https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_taittirIyopaniSad-zaMkarabhASya.xml
+    license: CC-BY-NC-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+    retrieved_at: 2026-10-07
+    notes: "Oṃ saha nāvavatu śānti-pāṭha. NON-COMMERCIAL - see TODO(replace-gretil)."
+  - id: wikisource-pratahsmaranam
+    name: "प्रातःस्मरणम्, Sanskrit Wikisource"
+    url: https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%BE%E0%A4%A4:%E0%A4%B8%E0%A5%8D%E0%A4%AE%E0%A4%B0%E0%A4%A3%E0%A4%AE%E0%A5%8D
+    license: CC-BY-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-sa/4.0/
+    retrieved_at: 2026-10-07
+    notes: "Vakratuṇḍa (verse 1) and Guru Brahmā (verse 6). Contains typos (kurū, guravai) - see review_notes."
+  - id: wikisource-karadarsanam
+    name: "करदर्शनम्, Sanskrit Wikisource"
+    url: https://sa.wikisource.org/wiki/%E0%A4%95%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D%E0%A4%B6%E0%A4%A8%E0%A4%AE%E0%A5%8D
+    license: CC-BY-SA-4.0
+    license_url: https://creativecommons.org/licenses/by-sa/4.0/
+    retrieved_at: 2026-10-07
+    notes: "Karāgre vasate."
   - id: dcs-morphology
     name: "Digital Corpus of Sanskrit (O. Hellwig) gold morphology, HF mirror sampathlonka/DCS_Sanskrit_Morphology_v1"
     url: https://huggingface.co/datasets/sampathlonka/DCS_Sanskrit_Morphology_v1

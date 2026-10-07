@@ -157,9 +157,13 @@ cd data && uv run python -m spike.fetch --dcs   # Vidyut data, GRETIL texts, DCS
 cd data && uv run python -m spike.eval_dcs      # split/lexicon accuracy vs DCS
 cd data && uv run python -m spike.draft         # draft analyses for advisor review
 
-# backend (Milestone 2)
-cd backend && uv sync && uv run pytest
-cd backend && uv run alembic upgrade head     # against a Neon branch URL
+cd data && uv run python -m vv_content.seed_build   # regenerate data/shlokas/*.yaml (initial seed)
+
+# backend (Milestone 1: models, migrations, seed; API in Milestone 2)
+cd backend && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
+#   tests: local throwaway Postgres, or DATABASE_URL_TEST = Neon branch (direct URL)
+cd backend && uv run alembic upgrade head                 # DATABASE_URL_MIGRATIONS = Neon branch
+cd backend && uv run python -m vv_backend.seed --dry-run  # then without --dry-run
 
 # app (Milestone 3)
 cd app && npm install && npm test && npx expo start
@@ -170,8 +174,8 @@ cd app && npm install && npm test && npx expo start
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
-| 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: Vidyut dependency approval, INRIA Heritage eval (Vedic forms) |
-| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
+| 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
+| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16; **run once on a Neon branch** (needs `DATABASE_URL_TEST`) |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
 | 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
@@ -191,6 +195,8 @@ Wikisource and its license.
   paid launch or B2B API: switch to a concrete, commercially usable source
   (Sanskrit Wikisource CC BY-SA, or an advisor-verified transcription we own),
   update `sources`, and re-verify the affected shlokas.
+- Find an open-corpus source for *Sarve bhavantu sukhinaḥ* (none on GRETIL or
+  Sanskrit Wikisource in its standard form); seed it once recorded in `sources.yaml`.
 - Evaluate the INRIA Sanskrit Heritage segmenter as a second opinion to Vidyut
   (Vedic forms) from a network that can reach sanskrit.inria.fr.
 
@@ -214,12 +220,23 @@ Wikisource and its license.
 | 2026-10-06 | GRETIL Ṛgveda e-text is CC BY-NC-SA (non-commercial) | OK for spike/free MVP; paid app or B2B API needs another source for Gayatri / Mahāmṛtyuñjaya text (see `data/sources.yaml`) |
 | 2026-10-06 | Single dropped sounds are down-weighted; "word missing" only when clearly worse than the reference | Spike: CTC model skips short vowels even in good recitations; raw deletion flags caused ~40% false flags on clean audio |
 | 2026-10-07 | Grammar pipeline: split from corpus pada-pāṭha when available, else Vidyut (conservative); morphology = all Vidyut lexicon readings as candidates; advisor picks or enters | Spike vs DCS: 20% of sentences split exactly, 87% of noun readings among candidates, 65% top-1 → usable as proposals only |
-| 2026-10-07 | Vidyut (MIT) proposed as content-pipeline dependency — **pending product-owner approval** | Only maintained open Pāṇinian toolkit installable here; offline only, never per learner request |
+| 2026-10-07 | Vidyut (MIT) approved as content-pipeline dependency | Product owner approval; offline only, never per learner request |
 | 2026-10-07 | Proceed with GRETIL texts for now; replace with a concrete commercially usable source later (see Future work) | Product owner decision; unblocks Milestone 1 seed |
 | 2026-10-07 | Recommended tooling: Vidyut primary + INRIA Heritage as second opinion; ByT5-Sanskrit (neural) not used for content | Comparison in `data/spike/RESULTS.md`; neural tagger conflicts with the rule-based grammar rule |
 | 2026-10-07 | Console must group/search analysis candidates and allow free entry | Up to 76 readings per common word; Vedic forms (dhīmahi, pracodayāt) unknown to the lexicon |
 
-## Schema draft (implemented in Milestone 1)
+| 2026-10-07 | Content rules enforced in the DB too: triggers reset `verified` on edits (word edits reset the shloka; derived `expected_phonemes` does not), CHECK verified ⇒ verified_by/at, `content_audit` append-only, learners read `verified_shlokas` | Defense in depth: no code path can forget the rule; role checks + audit stay in `vv_backend.content` (DB cannot see Clerk roles) |
+| 2026-10-07 | Seed never overwrites existing shlokas; sources upserted by key | DB is source of truth after seeding |
+| 2026-10-07 | Source wording is never silently corrected; typos/variants go to `review_notes` (e.g. Wikisource *kurū*, *guravai*) | Advisor decides; keeps provenance honest |
+| 2026-10-07 | App DB role `vv_app` (row access only; content_audit insert-only; no DDL); migrations/seed use the owner role | SECURITY.md least privilege |
+| 2026-10-07 | Tests run on real Postgres (local throwaway cluster or Neon branch via `DATABASE_URL_TEST`), not SQLite | Triggers/view/constraints are part of the rules under test |
+
+## Schema (implemented in Milestone 1; source of truth: `backend/src/vv_backend/db/models.py`)
+
+Additions to the draft below: `sources.key` (id from sources.yaml) and `sources.kind`;
+`word_analyses.verified_by/verified_at/created_at/updated_at`; `word_analyses.position`
+orders padas within a recited word; `morphology` holds `{split_source, members, status,
+proposed, candidates}` from the rule-based pipeline.
 
 ```
 sources            id, name, url, license, license_url, retrieved_at, notes

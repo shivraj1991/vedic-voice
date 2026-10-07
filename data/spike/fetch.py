@@ -1,6 +1,6 @@
-"""Download pinned inputs for the Sanskrit tooling spike into data/vendor/ (gitignored).
+"""Download pinned inputs for the content pipeline into data/vendor/ (gitignored).
 
-uv run python -m spike.fetch          # Vidyut data + GRETIL texts (~40 MB)
+uv run python -m spike.fetch          # Vidyut data + GRETIL/Wikisource texts (~45 MB)
 uv run python -m spike.fetch --dcs    # + DCS gold morphology for evaluation (163 MB)
 """
 
@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -23,11 +24,20 @@ VIDYUT_DATA = (
 )
 GRETIL = "https://gretil.sub.uni-goettingen.de/gretil"
 GRETIL_PLAIN = f"{GRETIL}/corpustei/transformations/plaintext"
+WIKISOURCE = "https://sa.wikisource.org/w/index.php"
 TEXTS = {
     # Unpinned: GRETIL files carry no version id; we record retrieval date in sources.yaml.
     "rv_padapatha.txt": f"{GRETIL_PLAIN}/sa_RgvedasaMhitApadapATha.txt",
     "rv_samhita.txt": f"{GRETIL_PLAIN}/sa_Rgveda-edAufrecht.txt",
     "bhagavadgita.htm": f"{GRETIL}/1_sanskr/2_epic/mbh/ext/bhgce__u.htm",
+    "brhadaranyaka.txt": f"{GRETIL_PLAIN}/sa_bRhadAraNyakopaniSadkANva-recension-comm.txt",
+    "isa.txt": f"{GRETIL_PLAIN}/sa_IzopaniSad-or-IzAvAsyopaniSadkANva-recension-comm.txt",
+    "taittiriya.txt": f"{GRETIL_PLAIN}/sa_taittirIyopaniSad-zaMkarabhASya.txt",
+    # Sanskrit Wikisource (CC BY-SA 4.0), raw wikitext
+    "ws_pratahsmaranam.wiki": f"{WIKISOURCE}?title=%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%BE%E0%A4%A4"
+    "%3A%E0%A4%B8%E0%A5%8D%E0%A4%AE%E0%A4%B0%E0%A4%A3%E0%A4%AE%E0%A5%8D&action=raw",
+    "ws_karadarsanam.wiki": f"{WIKISOURCE}?title=%E0%A4%95%E0%A4%B0%E0%A4%A6%E0%A4%B0%E0%A5%8D"
+    "%E0%A4%B6%E0%A4%A8%E0%A4%AE%E0%A5%8D&action=raw",
 }
 DCS = (
     "https://huggingface.co/datasets/sampathlonka/DCS_Sanskrit_Morphology_v1/resolve/"
@@ -64,6 +74,7 @@ def main() -> None:
         dest = VENDOR / name
         if not dest.exists():
             dest.write_bytes(_get(url))
+            time.sleep(2)  # Wikimedia rate-limits bursts
         print(f"ok   {dest.relative_to(ROOT)}")
 
     if args.dcs:

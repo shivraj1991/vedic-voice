@@ -93,6 +93,7 @@ class PadaDraft:
     members: list[str] = field(default_factory=list)  # compound members if marked
     candidates: list[Analysis] = field(default_factory=list)
     proposed: int | None = None  # index into candidates
+    word_index: int | None = None  # position of `surface` in the recited line (0-based)
 
     @property
     def status(self) -> str:
@@ -239,13 +240,21 @@ class Toolkit:
                 drafts.append(
                     PadaDraft(pada, pada, "padapatha", members, cands, 0 if cands else None)
                 )
+            surfaces = text_iast.split()
+            if surfaces:  # link padas to the recited (saṃhitā) words they come from
+                for d, owner in zip(
+                    drafts, _assign(surfaces, [d.pada for d in drafts]), strict=True
+                ):
+                    d.surface, d.word_index = surfaces[owner], owner
             return drafts
         surfaces = text_iast.split()
         for owner, pada, source in self.split(text_iast):
             cands = self.lookup(pada)
             # The segmenter's in-context reading is often implausible (vocative "tat"),
             # so the default is the top-ranked candidate; it is only a starting point.
-            drafts.append(PadaDraft(surfaces[owner], pada, source, [], cands, 0 if cands else None))
+            drafts.append(
+                PadaDraft(surfaces[owner], pada, source, [], cands, 0 if cands else None, owner)
+            )
         return drafts
 
     def split(self, text_iast: str, conservative: bool = True) -> list[tuple[int, str, str]]:
