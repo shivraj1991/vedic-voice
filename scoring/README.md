@@ -67,10 +67,12 @@ as "we couldn't match your chant to this shloka" rather than showing word scores
 uv sync
 uv run pytest                      # unit tests (synthetic posteriors; no model needed)
 uv run ruff check . && uv run ruff format --check .
-uv run python -m spike.fetch       # model (pinned, sha256) + Su-śrotā test split
+uv run python -m spike.fetch --skip-fp32  # 4-bit model (pinned, sha256) + Su-śrotā test split
+uv run python -m spike.fetch       # + the 1.2 GB fp32 model (offline evaluation only)
 uv run python -m spike.fetch --commons   # + Wikimedia Commons recordings (rate-limited)
 uv run python -m spike.eval --help
 uv run python -m spike.eval        # writes spike/out/{summary.md,report.json,review.html}
+uv run python -m spike.score_file --text "गुरुर्ब्रह्मा गुरुर्विष्णुः" --reference ref.m4a mine.m4a
 ```
 
 Open `spike/out/review.html` in a browser to listen to every case and label words.

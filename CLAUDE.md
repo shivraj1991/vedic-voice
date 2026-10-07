@@ -146,7 +146,9 @@ Known recurring / possible costs:
 cd scoring && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
 cd scoring && uv run python -m spike.fetch      # model (pinned, sha256) + Su-śrotā test split
 cd scoring && uv run python -m spike.eval       # → spike/out/{summary.md,report.json,review.html}
+cd scoring && uv run python -m spike.score_file --text "<IAST or Devanagari>" --reference ref.m4a attempt.m4a
 cd scoring && uv run python -m spike.eval --help
+# Cloud sessions: .claude/hooks/session-start.sh runs uv sync + spike.fetch --skip-fp32 (needs huggingface.co)
 
 # backend (Milestone 2)
 cd backend && uv sync && uv run pytest
