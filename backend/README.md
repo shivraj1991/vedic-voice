@@ -64,7 +64,9 @@ invoked as root) and skip if no PostgreSQL binaries are installed.
   CREATE ROLE vv_app LOGIN PASSWORD '<generate a long random one>';
   ```
   Do this *before* migration 0002, or re-run 0002 afterwards
-  (`alembic downgrade 0001 && alembic upgrade head`). Note that with a role created this way you
+  (`alembic downgrade 0001 && alembic upgrade head`, or tick **regrant** in the
+  `neon-migrate` workflow). `python -m vv_backend.db.check_app_role` (run by the workflow)
+  verifies the result. Note that with a role created this way you
   build its connection string yourself: take the owner's pooled URL and swap in
   `vv_app` and its password.
 
