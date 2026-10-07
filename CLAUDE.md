@@ -146,11 +146,27 @@ Known recurring / possible costs:
 cd scoring && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
 cd scoring && uv run python -m spike.fetch      # model (pinned, sha256) + Su-śrotā test split
 cd scoring && uv run python -m spike.eval       # → spike/out/{summary.md,report.json,review.html}
+cd scoring && uv run python -m spike.score_file --text "<IAST or Devanagari>" --reference ref.m4a attempt.m4a
 cd scoring && uv run python -m spike.eval --help
+# Cloud sessions: .claude/hooks/session-start.sh syncs scoring/ and data/ and fetches their
+# spike data (needs huggingface.co, github.com release downloads, gretil.sub.uni-goettingen.de)
 
-# backend (Milestone 2)
-cd backend && uv sync && uv run pytest
-cd backend && uv run alembic upgrade head     # against a Neon branch URL
+# data / content pipeline (Milestone 0b)
+cd data && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
+cd data && uv run python -m spike.fetch --dcs   # Vidyut data, GRETIL texts, DCS gold → data/vendor/
+cd data && uv run python -m spike.eval_dcs      # split/lexicon accuracy vs DCS
+cd data && uv run python -m spike.draft         # draft analyses for advisor review
+
+cd data && uv run python -m vv_content.seed_build   # regenerate data/shlokas/*.yaml (initial seed)
+
+# backend (Milestone 1: models, migrations, seed; Milestone 2: API)
+cd backend && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
+#   tests: local throwaway Postgres, or DATABASE_URL_TEST = Neon branch (direct URL)
+cd backend && uv run alembic upgrade head                 # DATABASE_URL_MIGRATIONS = Neon branch
+cd backend && uv run python -m vv_backend.seed --dry-run  # then without --dry-run
+cd backend && VV_LIVE_CLERK=1 uv run pytest tests/test_clerk_live.py   # needs *.clerk.accounts.dev allowed
+cd backend && uv run python -m vv_backend.devtools init && uv run python -m vv_backend.devtools token --role advisor
+#   simulated Clerk tokens for local dev; see backend/README.md (refused when VV_ENV=prod)
 
 # app (Milestone 3)
 cd app && npm install && npm test && npx expo start
@@ -161,9 +177,9 @@ cd app && npm install && npm test && npx expo start
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
-| 0b | Sanskrit tooling spike (sandhi/morphology) | Not started |
-| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
-| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
+| 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
+| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16 and in CI; **Neon run via GitHub Actions** once secrets `NEON_TEST_DIRECT_URL` / `NEON_MIGRATIONS_URL` are set (cloud sandbox cannot reach Postgres port 5432) |
+| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); real JWKS fetched and forged tokens rejected (`VV_LIVE_CLERK=1 pytest tests/test_clerk_live.py`). Still to check with a real sign-in: `role` claim + native `azp`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
 | 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
 | 4 | Progress tracking | Not started |
@@ -173,6 +189,19 @@ Asato mā (BṛU 1.3.28), Oṃ saha nāvavatu (TaitU 2.2.2), Pūrṇamadaḥ (Ī
 BG 2.47, Sarve bhavantu sukhinaḥ, Guru Brahmā, Vakratuṇḍa mahākāya,
 Karāgre vasate. The last four may lack a clean open-corpus source — check
 Wikisource and its license.
+
+## Future work (tracked, not in current scope)
+
+- **Replace GRETIL as the text source** (TODO `replace-gretil` in
+  `data/sources.yaml`). GRETIL is used for now, but its Ṛgveda texts (Saṃhitā
+  and pada-pāṭha) are CC BY-NC-SA and its Gītā is "reference only". Before any
+  paid launch or B2B API: switch to a concrete, commercially usable source
+  (Sanskrit Wikisource CC BY-SA, or an advisor-verified transcription we own),
+  update `sources`, and re-verify the affected shlokas.
+- Find an open-corpus source for *Sarve bhavantu sukhinaḥ* (none on GRETIL or
+  Sanskrit Wikisource in its standard form); seed it once recorded in `sources.yaml`.
+- Evaluate the INRIA Sanskrit Heritage segmenter as a second opinion to Vidyut
+  (Vedic forms) from a network that can reach sanskrit.inria.fr.
 
 ## Decisions log
 
@@ -193,8 +222,31 @@ Wikisource and its license.
 | 2026-10-06 | Su-śrotā dataset (IISc, CC BY 4.0) as the main scoring test set | Many consented speakers per text, incl. Guru Brahmā, BG 2.47, RV 1.1.1. Commons recordings kept in manifest (upload.wikimedia.org rate-limited the dev sandbox) |
 | 2026-10-06 | GRETIL Ṛgveda e-text is CC BY-NC-SA (non-commercial) | OK for spike/free MVP; paid app or B2B API needs another source for Gayatri / Mahāmṛtyuñjaya text (see `data/sources.yaml`) |
 | 2026-10-06 | Single dropped sounds are down-weighted; "word missing" only when clearly worse than the reference | Spike: CTC model skips short vowels even in good recitations; raw deletion flags caused ~40% false flags on clean audio |
+| 2026-10-07 | Grammar pipeline: split from corpus pada-pāṭha when available, else Vidyut (conservative); morphology = all Vidyut lexicon readings as candidates; advisor picks or enters | Spike vs DCS: 20% of sentences split exactly, 87% of noun readings among candidates, 65% top-1 → usable as proposals only |
+| 2026-10-07 | Vidyut (MIT) approved as content-pipeline dependency | Product owner approval; offline only, never per learner request |
+| 2026-10-07 | Proceed with GRETIL texts for now; replace with a concrete commercially usable source later (see Future work) | Product owner decision; unblocks Milestone 1 seed |
+| 2026-10-07 | Recommended tooling: Vidyut primary + INRIA Heritage as second opinion; ByT5-Sanskrit (neural) not used for content | Comparison in `data/spike/RESULTS.md`; neural tagger conflicts with the rule-based grammar rule |
+| 2026-10-07 | Console must group/search analysis candidates and allow free entry | Up to 76 readings per common word; Vedic forms (dhīmahi, pracodayāt) unknown to the lexicon |
+| 2026-10-07 | Content rules enforced in the DB too: triggers reset `verified` on edits (word edits reset the shloka; derived `expected_phonemes` does not), CHECK verified ⇒ verified_by/at, `content_audit` append-only, learners read `verified_shlokas` | Defense in depth: no code path can forget the rule; role checks + audit stay in `vv_backend.content` (DB cannot see Clerk roles) |
+| 2026-10-07 | Seed never overwrites existing shlokas; sources upserted by key | DB is source of truth after seeding |
+| 2026-10-07 | Source wording is never silently corrected; typos/variants go to `review_notes` (e.g. Wikisource *kurū*, *guravai*) | Advisor decides; keeps provenance honest |
+| 2026-10-07 | App DB role `vv_app` (row access only; content_audit insert-only; no DDL); migrations/seed use the owner role | SECURITY.md least privilege |
+| 2026-10-07 | API auth: PyJWT verifies Clerk RS256 tokens via JWKS (iss, azp, exp/nbf); role only from the token `role` claim; unknown role = learner | SECURITY.md; no Clerk SDK needed server-side |
+| 2026-10-07 | Clerk dev instance `exciting-man-4331.clerk.accounts.dev`; public config committed in `backend/config/clerk.dev.public.env` (no secrets; the API does not need `sk_...`) | Issuer/JWKS/publishable key are public by design |
+| 2026-10-07 | Tokens without `azp` accepted only when `CLERK_ALLOW_MISSING_AZP=true`; a present `azp` must always match | Clerk omits `azp` when there is no browser Origin (native iOS/Android app) |
+| 2026-10-07 | Simulated Clerk tokens (`vv_backend.devtools`, local JWKS) for dev/tests; refused when VV_ENV=prod | Build/test Milestone 2 before the Clerk app exists |
+| 2026-10-07 | Rate limits: DB-backed attempts/hour per user for scoring (holds across Lambdas); per-process limiter for upload URLs; API Gateway throttling as the global ceiling (deploy) | Lambda has no shared memory; avoid adding Redis (recurring cost) |
+| 2026-10-07 | Scoring called via `lambda.invoke` (IAM only) with a JSON contract in `scoring_client.py`; tmp recording deleted after scoring, copied to `rec/consented/` only with consent | Scoring not publicly invokable; privacy rule |
+| 2026-10-07 | Active reference recording must be advisor-verified; low match (< 0.88) returns "couldn't match your chant" instead of word feedback | Reference is content; spike threshold |
+| 2026-10-07 | Neon is reached from GitHub Actions (secrets), not from the Claude cloud sandbox | Sandbox egress is HTTPS-only (port 5432 blocked); keeps DB passwords out of chat and the repo |
+| 2026-10-07 | Tests run on real Postgres (local throwaway cluster or Neon branch via `DATABASE_URL_TEST`), not SQLite | Triggers/view/constraints are part of the rules under test |
 
-## Schema draft (implemented in Milestone 1)
+## Schema (implemented in Milestone 1; source of truth: `backend/src/vv_backend/db/models.py`)
+
+Additions to the draft below: `sources.key` (id from sources.yaml) and `sources.kind`;
+`word_analyses.verified_by/verified_at/created_at/updated_at`; `word_analyses.position`
+orders padas within a recited word; `morphology` holds `{split_source, members, status,
+proposed, candidates}` from the rule-based pipeline.
 
 ```
 sources            id, name, url, license, license_url, retrieved_at, notes

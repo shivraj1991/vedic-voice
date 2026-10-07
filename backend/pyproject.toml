@@ -1,0 +1,38 @@
+[project]
+name = "vv-backend"
+version = "0.1.0"
+description = "Vedic Voice backend: FastAPI API, data model, migrations, seed"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+    "pyyaml>=6.0",
+    "fastapi>=0.115",
+    "pyjwt[crypto]>=2.9",  # Clerk session JWT verification (RS256 via JWKS)
+    "mangum>=0.19",  # AWS Lambda adapter
+    "boto3>=1.35",  # R2 (S3 API) presigning + Lambda invoke; already in the Lambda runtime
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vv_backend"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

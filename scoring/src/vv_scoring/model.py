@@ -45,7 +45,7 @@ class Posteriors:
 class PhonemeModel:
     """Thin onnxruntime wrapper. Load once per process (Lambda container reuse)."""
 
-    def __init__(self, model_dir: str | Path, onnx_file: str = "model.onnx", threads: int = 0):
+    def __init__(self, model_dir: str | Path, onnx_file: str = "model_q4.onnx", threads: int = 0):
         model_dir = Path(model_dir)
         self.vocab: dict[str, int] = json.loads((model_dir / "vocab.json").read_text("utf-8"))
         opts = ort.SessionOptions()

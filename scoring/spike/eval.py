@@ -343,7 +343,7 @@ def write_summary(path: Path, metrics_: dict, grid: list[dict], info: dict) -> N
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--model-dir", default="models/w2v2-xlsr53-espeak")
-    ap.add_argument("--onnx-file", default="model.onnx")
+    ap.add_argument("--onnx-file", default="model_q4.onnx")  # shipped model; fp32: model.onnx
     ap.add_argument("--out", default="spike/out")
     ap.add_argument("--max-groups", type=int, default=40)
     ap.add_argument("--max-per-group", type=int, default=6)

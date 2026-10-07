@@ -1,0 +1,38 @@
+# Manual: apply Alembic migrations (and optionally the seed) to a Neon branch.
+# Actions -> neon-migrate -> Run workflow. Uses the OWNER role's DIRECT URL
+# (migrations need DDL rights; the app role vv_app deliberately has none).
+name: neon-migrate
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Also load the initial seed (idempotent, never overwrites)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: neon-test   # optional: add required reviewers in repo settings
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL_MIGRATIONS: ${{ secrets.NEON_MIGRATIONS_URL }}
+    steps:
+      - name: Require secret
+        run: test -n "$DATABASE_URL_MIGRATIONS" || (echo "Set NEON_MIGRATIONS_URL secret" && exit 1)
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run alembic upgrade head
+      - run: uv run alembic current
+      - name: Seed
+        if: inputs.seed
+        env:
+          DATABASE_URL: ${{ secrets.NEON_MIGRATIONS_URL }}
+        run: uv run python -m vv_backend.seed

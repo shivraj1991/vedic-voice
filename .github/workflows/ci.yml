@@ -1,0 +1,82 @@
+# CI: lint + tests for every package. No credentials are stored in the repo;
+# Neon URLs come from GitHub Actions secrets (Settings -> Secrets and variables -> Actions).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: vv
+          POSTGRES_PASSWORD: ci-only-throwaway
+          POSTGRES_DB: vv
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U vv" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check . && uv run ruff format --check .
+      - name: Tests (throwaway Postgres 16 service)
+        env:
+          DATABASE_URL_TEST: postgresql://vv:ci-only-throwaway@localhost:5432/vv
+        run: uv run pytest -q
+
+  backend-neon:
+    # The same suite against a Neon *test branch*. Each run migrates into a fresh
+    # schema and drops it. Skipped until the secret exists.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL_TEST: ${{ secrets.NEON_TEST_DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.DATABASE_URL_TEST != ''
+      - uses: astral-sh/setup-uv@v6
+        if: env.DATABASE_URL_TEST != ''
+      - run: uv sync --locked
+        if: env.DATABASE_URL_TEST != ''
+      - name: Tests on Neon branch
+        if: env.DATABASE_URL_TEST != ''
+        run: uv run pytest -q
+
+  scoring:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scoring
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q
+
+  data:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q
