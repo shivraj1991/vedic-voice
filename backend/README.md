@@ -26,6 +26,23 @@ DATABASE_URL="$DATABASE_URL_MIGRATIONS" uv run python -m vv_backend.seed --dry-r
 DATABASE_URL="$DATABASE_URL_MIGRATIONS" uv run python -m vv_backend.seed
 ```
 
+### CI (GitHub Actions)
+
+- `.github/workflows/ci.yml` runs lint and tests for backend, scoring and data on every
+  push/PR (backend against a throwaway Postgres 16 service). Job `backend-neon` re-runs the
+  backend suite on a Neon test branch when the repo secret `NEON_TEST_DIRECT_URL` is set.
+- `.github/workflows/neon-migrate.yml` (manual, Actions tab) applies migrations and the
+  seed to a Neon branch using the secret `NEON_MIGRATIONS_URL`.
+
+Secrets to add (Settings → Secrets and variables → Actions); never commit or paste them:
+
+| Secret | Value |
+|---|---|
+| `NEON_TEST_DIRECT_URL` | test branch, **owner** role, **direct** (no `-pooler`) URL, `sslmode=require` |
+| `NEON_MIGRATIONS_URL` | same kind of URL for the branch you want to migrate/seed |
+
+The `vv_app` **pooled** URL is the runtime `DATABASE_URL` for the deployed API only.
+
 ### Tests against a Neon branch
 
 Create a branch in the Neon console, then set `DATABASE_URL_TEST` to its

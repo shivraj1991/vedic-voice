@@ -16,7 +16,10 @@ def test_upgrade_downgrade_roundtrip(fresh_db):
         assert set(inspect(conn).get_table_names()) <= {"alembic_version"}
         assert (
             conn.execute(
-                text("SELECT count(*) FROM pg_views WHERE viewname = 'verified_shlokas'")
+                text(
+                    "SELECT count(*) FROM pg_views WHERE viewname = 'verified_shlokas' "
+                    "AND schemaname = current_schema()"
+                )
             ).scalar()
             == 0
         )
