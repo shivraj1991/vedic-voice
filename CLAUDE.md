@@ -183,6 +183,17 @@ BG 2.47, Sarve bhavantu sukhinaḥ, Guru Brahmā, Vakratuṇḍa mahākāya,
 Karāgre vasate. The last four may lack a clean open-corpus source — check
 Wikisource and its license.
 
+## Future work (tracked, not in current scope)
+
+- **Replace GRETIL as the text source** (TODO `replace-gretil` in
+  `data/sources.yaml`). GRETIL is used for now, but its Ṛgveda texts (Saṃhitā
+  and pada-pāṭha) are CC BY-NC-SA and its Gītā is "reference only". Before any
+  paid launch or B2B API: switch to a concrete, commercially usable source
+  (Sanskrit Wikisource CC BY-SA, or an advisor-verified transcription we own),
+  update `sources`, and re-verify the affected shlokas.
+- Evaluate the INRIA Sanskrit Heritage segmenter as a second opinion to Vidyut
+  (Vedic forms) from a network that can reach sanskrit.inria.fr.
+
 ## Decisions log
 
 | Date | Decision | Why |
@@ -204,6 +215,8 @@ Wikisource and its license.
 | 2026-10-06 | Single dropped sounds are down-weighted; "word missing" only when clearly worse than the reference | Spike: CTC model skips short vowels even in good recitations; raw deletion flags caused ~40% false flags on clean audio |
 | 2026-10-07 | Grammar pipeline: split from corpus pada-pāṭha when available, else Vidyut (conservative); morphology = all Vidyut lexicon readings as candidates; advisor picks or enters | Spike vs DCS: 20% of sentences split exactly, 87% of noun readings among candidates, 65% top-1 → usable as proposals only |
 | 2026-10-07 | Vidyut (MIT) proposed as content-pipeline dependency — **pending product-owner approval** | Only maintained open Pāṇinian toolkit installable here; offline only, never per learner request |
+| 2026-10-07 | Proceed with GRETIL texts for now; replace with a concrete commercially usable source later (see Future work) | Product owner decision; unblocks Milestone 1 seed |
+| 2026-10-07 | Recommended tooling: Vidyut primary + INRIA Heritage as second opinion; ByT5-Sanskrit (neural) not used for content | Comparison in `data/spike/RESULTS.md`; neural tagger conflicts with the rule-based grammar rule |
 | 2026-10-07 | Console must group/search analysis candidates and allow free entry | Up to 76 readings per common word; Vedic forms (dhīmahi, pracodayāt) unknown to the lexicon |
 
 ## Schema draft (implemented in Milestone 1)

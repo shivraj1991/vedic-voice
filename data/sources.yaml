@@ -1,6 +1,12 @@
 # Sources of text, audio and models used by Vedic Voice, with licenses.
 # Mirrors the `sources` table (Milestone 1). Add an entry BEFORE using a source.
 # retrieved_at = date we fetched/checked the license.
+#
+# TODO(replace-gretil): GRETIL texts are used for now (decision 2026-10-07), but
+# the Ṛgveda files are CC BY-NC-SA and the Gītā file is "reference only". Before
+# any paid launch / B2B API, replace every gretil-* source used for learner
+# content with a concrete, commercially usable source (e.g. Sanskrit Wikisource
+# CC BY-SA, or an advisor-verified transcription we own) and re-verify the shlokas.
 
 texts:
   - id: gretil-bhagavadgita

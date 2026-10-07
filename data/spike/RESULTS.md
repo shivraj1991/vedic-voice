@@ -66,8 +66,29 @@ exactly why advisor verification is mandatory.
 4. **Vedic coverage is the gap.** 3 of 10 Gayatri padas are unknown. Before
    Milestone 1, evaluate INRIA Heritage (Vedic support) from a normal network.
    Otherwise the advisor enters these by hand: about 10–20 words across the 10 shlokas.
-5. **Licensing:** the RV pada-pāṭha is non-commercial, same as the Saṃhitā text
-   (already flagged in `data/sources.yaml`).
+5. **Licensing:** the RV pada-pāṭha is non-commercial, same as the Saṃhitā text.
+   **Decision (2026-10-07): proceed with GRETIL for now; replace it with a
+   concrete, commercially usable source before any paid launch / B2B use.**
+   Tracked in CLAUDE.md "Future work" and `data/sources.yaml`.
 6. **Vidyut becomes a production dependency of the content pipeline**: MIT,
    offline only, never in the learner request path. **Needs product-owner
    approval** as a new major dependency (CLAUDE.md rule).
+
+## Alternatives to Vidyut (reviewed 2026-10-07)
+
+| Option | Approach | License | Strengths | Weaknesses / status here |
+|---|---|---|---|---|
+| **Vidyut** (ambuda.org) — *current* | Rule-based (Pāṇinian generator + lexicon of generated forms) + statistical segmenter | MIT | pip wheel, offline, fast (~1 s load); actively maintained; deterministic lexicon fits our "rule-based grammar" rule | Segmenter over-splits; weak on Vedic forms; one lexicon error found (*lakṣmīḥ*) |
+| **INRIA Sanskrit Heritage Platform** (G. Huet) | Rule-based segmenter + lemmatizer over a finite-state lexicon | Code LGPL; data LGPL-LR | Most mature rule-based segmenter; lists *all* valid segmentations; some Vedic coverage; public web interface | OCaml build to self-host, or use the web service (fine for the offline pipeline). Hosts blocked from this sandbox, so not evaluated |
+| **Samsaadhanii** (Univ. of Hyderabad, A. Kulkarni) | Rule-based morphological analyser, sandhi splitter, dependency parser | Open source (license to confirm before use) | Strong grammar coverage including kāraka (dependency) analysis | Heavy Linux install (lttoolbox, Apache/CGI); server-side only; not evaluated |
+| **sanskrit_parser** (kmadathil) | Rule-based sandhi splitting over INRIA lexicon data | MIT (code) + INRIA data (LGPL-LR) | Pure Python | Last release 2023-03; needs INRIA data (blocked here); slower |
+| **ByT5-Sanskrit** (Nehrdich, Hellwig, Keutzer 2024; HF `chronbmm/*`, `buddhist-nlp/byt5-sanskrit`) | Neural seq2seq (segmentation, lemma, morphology tags) | Not stated on the model cards | Reported state-of-the-art accuracy on DCS benchmarks; handles unseen forms | **Neural, not rule-based**: conflicts with our content rule unless the product owner relaxes it; needs PyTorch; unclear license |
+| DCS (Hellwig) | Gold annotations, not a tool | CC BY 4.0 | Ground truth for evaluation | Covers corpus sentences only |
+
+**Recommendation:** keep **Vidyut** as the pipeline's proposal engine: permissive
+license, easy to install and deploy, deterministic. Add the **INRIA Heritage
+segmenter as a second opinion**, run from a normal network in the offline
+pipeline. Where the two disagree, the advisor's attention is drawn to that word, and
+Heritage should cover some Vedic forms that Vidyut lacks. Do not use ByT5-Sanskrit
+for content unless the "rule-based only" rule is deliberately changed. It is a
+good candidate for *evaluation* (flagging likely errors), once its license is clear.
