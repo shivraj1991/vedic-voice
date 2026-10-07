@@ -2,9 +2,10 @@
 
 Checks (SECURITY.md): RS256 signature against Clerk's JWKS, `exp`/`nbf` (small
 leeway for clock skew), `iss` = our Clerk instance, `azp` in our authorized
-parties, `sub` present. The role comes only from the verified token's `role`
-claim (Clerk session-token template: "role": "{{user.public_metadata.role}}"),
-never from request data. Unknown or missing roles mean "learner".
+parties (tokens from the native app carry no `azp` because there is no browser
+Origin; they are accepted only when CLERK_ALLOW_MISSING_AZP=true), `sub` present.
+The role comes only from the verified token's `role` claim (Clerk session-token
+template: "role": "{{user.public_metadata.role}}"), never from request data. Unknown or missing roles mean "learner".
 
 Tokens are never logged.
 """
@@ -84,7 +85,11 @@ def verify_token(token: str, settings: Settings, keys: KeyProvider) -> Principal
         raise AuthError("signing keys unavailable") from e
     except jwt.InvalidTokenError as e:
         raise AuthError(type(e).__name__) from e
-    if claims.get("azp") not in settings.authorized_parties:
+    azp = claims.get("azp")
+    if azp is None:
+        if not settings.allow_missing_azp:
+            raise AuthError("missing authorized party")
+    elif azp not in settings.authorized_parties:
         raise AuthError("unauthorized party")
     try:
         role = Role(claims.get("role") or "learner")

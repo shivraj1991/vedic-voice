@@ -43,6 +43,9 @@ class Settings:
     clerk_jwks_url: str | None
     authorized_parties: tuple[str, ...]
     cors_origins: tuple[str, ...] = ()
+    # Clerk omits `azp` when the request had no browser Origin (native iOS/Android).
+    # True: tokens without azp are accepted; a *present* azp must still match.
+    allow_missing_azp: bool = False
     dev_jwks_path: str | None = None  # dev only: JWKS file from `vv_backend.devtools`
     r2: R2Settings | None = None
     scoring_function: str | None = None
@@ -88,6 +91,7 @@ class Settings:
             clerk_issuer=_req("CLERK_ISSUER"),
             clerk_jwks_url=os.environ.get("CLERK_JWKS_URL") or None,
             authorized_parties=_list("CLERK_AUTHORIZED_PARTIES"),
+            allow_missing_azp=os.environ.get("CLERK_ALLOW_MISSING_AZP", "").lower() == "true",
             cors_origins=_list("CORS_ORIGINS"),
             dev_jwks_path=os.environ.get("VV_DEV_JWKS_PATH") or None,
             r2=r2,

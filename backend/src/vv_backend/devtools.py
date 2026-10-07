@@ -2,6 +2,7 @@
 
     uv run python -m vv_backend.devtools init                 # writes .dev-keys/ (gitignored)
     uv run python -m vv_backend.devtools token --role advisor --sub user_dev_advisor
+    pbpaste | uv run python -m vv_backend.devtools verify   # check a real Clerk token
 
 Run the API against the generated JWKS with:
     VV_ENV=dev VV_DEV_JWKS_PATH=.dev-keys/jwks.json CLERK_ISSUER=https://dev.clerk.local \\
@@ -42,7 +43,7 @@ def make_token(
     sub: str = "user_dev",
     role: str | None = None,
     issuer: str = DEV_ISSUER,
-    azp: str = DEV_AZP,
+    azp: str | None = DEV_AZP,
     ttl_s: int = 3600,
     now: float | None = None,
 ) -> str:
@@ -51,7 +52,26 @@ def make_token(
               "exp": int(now) + ttl_s, "sid": "sess_dev"}  # fmt: skip
     if role:
         claims["role"] = role
+    if azp is None:
+        claims.pop("azp")
     return jwt.encode(claims, key, algorithm="RS256", headers={"kid": kid})
+
+
+def verify_from_stdin() -> None:
+    """Check a real Clerk session token (paste from the app/browser) against CLERK_* env vars.
+
+    Prints the claims we rely on, then verifies signature/iss/azp/exp like the API does.
+    """
+    import sys
+
+    from .api.auth import ClerkJWKS, verify_token
+    from .api.settings import Settings
+
+    settings = Settings.from_env()
+    token = sys.stdin.read().strip()
+    claims = jwt.decode(token, options={"verify_signature": False})
+    print("claims:", {k: claims.get(k) for k in ("iss", "azp", "sub", "role", "exp")})
+    print("verified:", verify_token(token, settings, ClerkJWKS(settings.clerk_jwks_url)))
 
 
 def main() -> None:
@@ -62,7 +82,11 @@ def main() -> None:
     t.add_argument("--sub", default="user_dev")
     t.add_argument("--role", choices=["admin", "advisor", "learner"], default=None)
     t.add_argument("--ttl", type=int, default=3600)
+    sub.add_parser("verify", help="verify a real Clerk token from stdin against CLERK_* env vars")
     args = ap.parse_args()
+    if args.cmd == "verify":
+        verify_from_stdin()
+        return
     if args.cmd == "init":
         key, jwks = new_keypair()
         DEV_DIR.mkdir(exist_ok=True)

@@ -82,3 +82,14 @@ def test_settings_safety_rails():
         dataclasses.replace(SETTINGS, signed_url_seconds=3600)
     with pytest.raises(SettingsError):
         Settings(env="prod", clerk_issuer="x", clerk_jwks_url=None, authorized_parties=("a",))
+
+
+def test_missing_azp_only_with_explicit_setting(connection):
+    from .api_helpers import make_api
+
+    strict = make_api(connection)
+    assert strict.client.get("/me", headers=auth(azp=None)).status_code == 401
+    native = make_api(connection, allow_missing_azp=True)
+    assert native.client.get("/me", headers=auth(azp=None)).status_code == 200
+    # a present but wrong azp is still rejected
+    assert native.client.get("/me", headers=auth(azp="https://evil.example")).status_code == 401

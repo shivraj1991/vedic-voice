@@ -73,5 +73,19 @@ VV_ENV=dev VV_DEV_JWKS_PATH=.dev-keys/jwks.json CLERK_ISSUER=https://dev.clerk.l
   uv run --with uvicorn uvicorn --factory vv_backend.api.app:create_app
 curl -H "Authorization: Bearer $TOKEN" localhost:8000/admin/shlokas
 ```
-`VV_DEV_JWKS_PATH` is rejected when `VV_ENV=prod`. Switching to real Clerk = set
-`CLERK_ISSUER`, `CLERK_JWKS_URL`, `CLERK_AUTHORIZED_PARTIES` and drop `VV_DEV_JWKS_PATH`.
+`VV_DEV_JWKS_PATH` is rejected when `VV_ENV=prod`.
+
+### Real Clerk (development instance)
+
+Public values are in `config/clerk.dev.public.env` (issuer, JWKS URL, authorized
+parties, publishable key). Run with them instead of the simulated keys:
+
+```
+set -a; . config/clerk.dev.public.env; set +a
+VV_ENV=dev DATABASE_URL=postgresql://... uv run --with uvicorn uvicorn --factory vv_backend.api.app:create_app
+# check a real session token (copied from the app / browser devtools):
+pbpaste | uv run python -m vv_backend.devtools verify
+```
+Tokens from the native app carry no `azp` (no browser Origin), hence
+`CLERK_ALLOW_MISSING_AZP=true`; a token that does carry `azp` must match
+`CLERK_AUTHORIZED_PARTIES`.

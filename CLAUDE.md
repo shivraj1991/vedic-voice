@@ -178,7 +178,7 @@ cd app && npm install && npm test && npx expo start
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16; **run once on a Neon branch** (needs `DATABASE_URL_TEST`) |
-| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (55 tests). Open: real Clerk app (issuer/JWKS), R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
+| 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); verify a real token once the sandbox may reach `*.clerk.accounts.dev`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
 | 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
 | 4 | Progress tracking | Not started |
@@ -231,6 +231,8 @@ Wikisource and its license.
 | 2026-10-07 | Source wording is never silently corrected; typos/variants go to `review_notes` (e.g. Wikisource *kurū*, *guravai*) | Advisor decides; keeps provenance honest |
 | 2026-10-07 | App DB role `vv_app` (row access only; content_audit insert-only; no DDL); migrations/seed use the owner role | SECURITY.md least privilege |
 | 2026-10-07 | API auth: PyJWT verifies Clerk RS256 tokens via JWKS (iss, azp, exp/nbf); role only from the token `role` claim; unknown role = learner | SECURITY.md; no Clerk SDK needed server-side |
+| 2026-10-07 | Clerk dev instance `exciting-man-4331.clerk.accounts.dev`; public config committed in `backend/config/clerk.dev.public.env` (no secrets; the API does not need `sk_...`) | Issuer/JWKS/publishable key are public by design |
+| 2026-10-07 | Tokens without `azp` accepted only when `CLERK_ALLOW_MISSING_AZP=true`; a present `azp` must always match | Clerk omits `azp` when there is no browser Origin (native iOS/Android app) |
 | 2026-10-07 | Simulated Clerk tokens (`vv_backend.devtools`, local JWKS) for dev/tests; refused when VV_ENV=prod | Build/test Milestone 2 before the Clerk app exists |
 | 2026-10-07 | Rate limits: DB-backed attempts/hour per user for scoring (holds across Lambdas); per-process limiter for upload URLs; API Gateway throttling as the global ceiling (deploy) | Lambda has no shared memory; avoid adding Redis (recurring cost) |
 | 2026-10-07 | Scoring called via `lambda.invoke` (IAM only) with a JSON contract in `scoring_client.py`; tmp recording deleted after scoring, copied to `rec/consented/` only with consent | Scoring not publicly invokable; privacy rule |
