@@ -1,0 +1,40 @@
+[project]
+name = "vv-scoring"
+version = "0.1.0"
+description = "Vedic Voice pronunciation scoring: phoneme alignment + goodness-of-pronunciation against a reference recording"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.0",
+    "onnxruntime>=1.18",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+# Spike harness only (reads the Su-srota parquet test set); not shipped in the Lambda image.
+spike = ["pyarrow>=16"]
+
+[tool.uv]
+package = true
+default-groups = ["dev", "spike"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vv_scoring"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# inline CSS/JS for the self-contained review page
+"spike/review.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

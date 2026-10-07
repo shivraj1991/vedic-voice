@@ -143,7 +143,9 @@ Known recurring / possible costs:
 
 ```
 # scoring (Milestone 0)
-cd scoring && uv sync && uv run pytest
+cd scoring && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
+cd scoring && uv run python -m spike.fetch      # model (pinned, sha256) + Su-śrotā test split
+cd scoring && uv run python -m spike.eval       # → spike/out/{summary.md,report.json,review.html}
 cd scoring && uv run python -m spike.eval --help
 
 # backend (Milestone 2)
@@ -158,7 +160,7 @@ cd app && npm install && npm test && npx expo start
 
 | # | Milestone | Status |
 |---|---|---|
-| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Not started — blocked on network access to model/recording hosts |
+| 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Not started |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
@@ -186,6 +188,11 @@ Wikisource and its license.
 | 2026-10-06 | After seeding, the DB is the content source of truth; YAML only seeds the initial 10 | Console edits content; `content_audit` keeps history |
 | 2026-10-06 | Recordings: AAC m4a mono 16 kHz ~32 kbps, ≤60 s, ≤2 MB | Free-tier storage/bandwidth; supported on iOS and Android |
 | 2026-10-06 | Python deps with `uv` | Fast, lockfiles |
+| 2026-10-06 | Scoring = phoneme posteriors (wav2vec2 XLSR-53 espeak, Apache-2.0) + CTC alignment + GOP over curated confusions, calibrated against the reference recording | No Sanskrit ASR needed; phones don't autocorrect mistakes; every flag maps to an explainable issue; reference calibration absorbs model blind spots (e.g. retroflexes) |
+| 2026-10-06 | Run the model with onnxruntime, not PyTorch; ship the 4-bit (q4) model | Much smaller Lambda image / cold start. Spike: q4 (230 MB) ≈ fp32 (1.2 GB) accuracy. ONNX export currently third-party (pinned + sha256); re-export ourselves before production |
+| 2026-10-06 | Su-śrotā dataset (IISc, CC BY 4.0) as the main scoring test set | Many consented speakers per text, incl. Guru Brahmā, BG 2.47, RV 1.1.1. Commons recordings kept in manifest (upload.wikimedia.org rate-limited the dev sandbox) |
+| 2026-10-06 | GRETIL Ṛgveda e-text is CC BY-NC-SA (non-commercial) | OK for spike/free MVP; paid app or B2B API needs another source for Gayatri / Mahāmṛtyuñjaya text (see `data/sources.yaml`) |
+| 2026-10-06 | Single dropped sounds are down-weighted; "word missing" only when clearly worse than the reference | Spike: CTC model skips short vowels even in good recitations; raw deletion flags caused ~40% false flags on clean audio |
 
 ## Schema draft (implemented in Milestone 1)
 
