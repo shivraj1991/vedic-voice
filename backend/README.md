@@ -54,10 +54,19 @@ invoked as root) and skip if no PostgreSQL binaries are installed.
 ### Roles (SECURITY.md: least privilege)
 
 - **Owner role** (Neon default): runs migrations and the seed (`DATABASE_URL_MIGRATIONS`).
-- **`vv_app`**: used by the API and Lambdas (`DATABASE_URL`, pooled). Create it in the
-  Neon console *before* running migration 0002, or re-run 0002 afterwards
-  (`alembic downgrade 0001 && alembic upgrade head`). It can read and write rows,
-  only append to `content_audit`, only read `sources`, and run no DDL.
+- **`vv_app`**: used by the API and Lambdas (`DATABASE_URL`, pooled). It can read and
+  write rows, only append to `content_audit`, only read `sources`, and run no DDL.
+  Create it **with SQL** (Neon SQL Editor, connected as the owner role), not on the
+  console's Roles page: console roles join `neon_superuser`, which can write all
+  data, so the narrow grants would not limit them (the CI test
+  `test_app_role_is_least_privilege` fails in that case):
+  ```sql
+  CREATE ROLE vv_app LOGIN PASSWORD '<generate a long random one>';
+  ```
+  Do this *before* migration 0002, or re-run 0002 afterwards
+  (`alembic downgrade 0001 && alembic upgrade head`). Note that with a role created this way you
+  build its connection string yourself: take the owner's pooled URL and swap in
+  `vv_app` and its password.
 
 ## API (Milestone 2)
 

@@ -50,6 +50,14 @@ def test_app_role_is_least_privilege(fresh_db):
                 text("SELECT has_table_privilege('vv_app', :t, :p)"), {"t": table, "p": priv}
             ).scalar()
 
+    with engine.connect() as conn:
+        write_all = conn.execute(
+            text("SELECT pg_has_role('vv_app', 'pg_write_all_data', 'USAGE')")
+        ).scalar()
+    assert not write_all, (
+        "vv_app inherits pg_write_all_data (a Neon console role is in neon_superuser); "
+        "recreate it with SQL as the owner role, see backend/README.md"
+    )
     assert can("UPDATE", "shlokas") and can("INSERT", "attempts")
     assert can("INSERT", "content_audit") and can("SELECT", "verified_shlokas")
     assert not can("UPDATE", "content_audit") and not can("DELETE", "content_audit")
