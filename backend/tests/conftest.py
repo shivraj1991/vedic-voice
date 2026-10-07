@@ -74,19 +74,36 @@ class LocalPostgres:
         if self.as_root:
             shutil.chown(self.dir, user="postgres")
         data = self.dir / "data"
-        self._run(str(self.bindir / "initdb"), "-D", str(data), "-A", "trust", "-U", "vv",
-                  "-E", "UTF8", "--locale=C.UTF-8")  # fmt: skip
         self._run(
-            str(self.bindir / "pg_ctl"), "-D", str(data), "-w", "-l", str(self.dir / "log"),
-            "-o", f"-p {self.port} -k {self.dir} -c listen_addresses=127.0.0.1 -c fsync=off",
+            str(self.bindir / "initdb"),
+            "-D",
+            str(data),
+            "-A",
+            "trust",
+            "-U",
+            "vv",
+            "-E",
+            "UTF8",
+            "--locale=C.UTF-8",
+        )
+        self._run(
+            str(self.bindir / "pg_ctl"),
+            "-D",
+            str(data),
+            "-w",
+            "-l",
+            str(self.dir / "log"),
+            "-o",
+            f"-p {self.port} -k {self.dir} -c listen_addresses=127.0.0.1 -c fsync=off",
             "start",
-        )  # fmt: skip
+        )
         return f"postgresql://vv@127.0.0.1:{self.port}/postgres"
 
     def stop(self) -> None:
         try:
-            self._run(str(self.bindir / "pg_ctl"), "-D", str(self.dir / "data"), "-m", "fast",
-                      "stop")  # fmt: skip
+            self._run(
+                str(self.bindir / "pg_ctl"), "-D", str(self.dir / "data"), "-m", "fast", "stop"
+            )
         finally:
             shutil.rmtree(self.dir, ignore_errors=True)
 
@@ -158,14 +175,34 @@ def migrated_engine(fresh_db) -> Engine:
 
 
 @pytest.fixture
-def session(migrated_engine: Engine) -> Iterator[Session]:
-    """A session whose work is rolled back after the test (commits become savepoints)."""
+def connection(migrated_engine: Engine) -> Iterator:
+    """A connection inside a transaction that is rolled back after the test."""
     conn = migrated_engine.connect()
     trans = conn.begin()
-    s = Session(bind=conn, join_transaction_mode="create_savepoint")
+    try:
+        yield conn
+    finally:
+        trans.rollback()
+        conn.close()
+
+
+def session_on(conn) -> Session:
+    # commits inside become savepoint releases; the outer transaction still rolls back
+    return Session(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+
+
+@pytest.fixture
+def session(connection) -> Iterator[Session]:
+    s = session_on(connection)
     try:
         yield s
     finally:
         s.close()
-        trans.rollback()
-        conn.close()
+
+
+@pytest.fixture
+def api(connection):
+    """FastAPI test client with simulated Clerk tokens, in-memory R2 and a fake scorer."""
+    from .api_helpers import make_api
+
+    return make_api(connection)

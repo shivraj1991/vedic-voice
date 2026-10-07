@@ -1,7 +1,7 @@
-# backend — data model, migrations, seed (Milestone 1)
+# backend — API, data model, migrations, seed
 
-The FastAPI API arrives in Milestone 2. This package currently holds:
-
+- `src/vv_backend/api/` — FastAPI app (Milestone 2), run on AWS Lambda via Mangum
+  (`vv_backend.lambda_handler.handler`).
 - `src/vv_backend/db/models.py` — SQLAlchemy models (schema in CLAUDE.md).
 - `migrations/` — Alembic. `0001` creates the tables plus the DB-level content
   rules: editing verified content resets `verified` (triggers), `content_audit`
@@ -41,3 +41,37 @@ invoked as root) and skip if no PostgreSQL binaries are installed.
   Neon console *before* running migration 0002, or re-run 0002 afterwards
   (`alembic downgrade 0001 && alembic upgrade head`). It can read and write rows,
   only append to `content_audit`, only read `sources`, and run no DDL.
+
+## API (Milestone 2)
+
+| Route | Who | Notes |
+|---|---|---|
+| `GET /health`, `GET /shlokas`, `GET /shlokas/{slug}` | public | verified content only |
+| `GET /me`, `PUT /me/consent`, `GET /me/attempts` | learner | user row created on first call (Clerk ID only) |
+| `GET /shlokas/{slug}/reference-audio` | learner | signed GET (≤15 min) + word timings |
+| `POST /recordings/upload-url` | learner | signed PUT to `rec/tmp/{user}/{id}.m4a` (server-chosen key) |
+| `POST /score-pronunciation` | learner | own key only; HEAD size/type check; per-user hourly limit; tmp deleted, consented copy kept |
+| `GET/PATCH /admin/shlokas[/{slug}]`, `PATCH /admin/word-analyses/{id}` | admin, advisor | edits reset verified, audited |
+| `POST /admin/shlokas/{slug}/verify`, `POST /admin/word-analyses/{id}/verify`, `POST /admin/audio/{id}/verify` | **advisor** | |
+| `POST /admin/audio/upload-url`, `POST /admin/audio`, `GET /admin/audio`, `GET /admin/audio/{id}/play-url`, `POST /admin/audio/{id}/activate` | admin, advisor | only verified references can be activated |
+| `PUT /admin/word-labels`, `GET /admin/audit` | admin, advisor | ground-truth labels; audit log |
+
+Auth: Clerk session JWT (RS256 via JWKS), checks `exp`/`nbf`, `iss`, `azp`; role from the
+token's `role` claim (Clerk session-token template `"role": "{{user.public_metadata.role}}"`).
+
+Scoring is a separate Lambda; the request/response contract is in
+`src/vv_backend/api/scoring_client.py`. Until it is deployed, `/score-pronunciation`
+returns 503 (and tests use `FakeScorer`). Without R2 settings, audio routes return 503.
+
+### Simulated tokens (until Clerk is set up)
+
+```
+uv run python -m vv_backend.devtools init                       # .dev-keys/ (gitignored)
+uv run python -m vv_backend.devtools token --role advisor --sub user_dev_advisor
+VV_ENV=dev VV_DEV_JWKS_PATH=.dev-keys/jwks.json CLERK_ISSUER=https://dev.clerk.local \
+  CLERK_AUTHORIZED_PARTIES=http://localhost:8081 DATABASE_URL=postgresql://... \
+  uv run --with uvicorn uvicorn --factory vv_backend.api.app:create_app
+curl -H "Authorization: Bearer $TOKEN" localhost:8000/admin/shlokas
+```
+`VV_DEV_JWKS_PATH` is rejected when `VV_ENV=prod`. Switching to real Clerk = set
+`CLERK_ISSUER`, `CLERK_JWKS_URL`, `CLERK_AUTHORIZED_PARTIES` and drop `VV_DEV_JWKS_PATH`.

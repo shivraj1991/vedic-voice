@@ -39,3 +39,6 @@ web-build/
 # Content pipeline data (downloaded, see data/spike/fetch.py)
 data/vendor/
 data/spike/out/
+
+# Local simulated Clerk keys (vv_backend.devtools)
+.dev-keys/

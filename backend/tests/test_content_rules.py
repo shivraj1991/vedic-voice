@@ -33,8 +33,14 @@ def shloka(session: Session) -> Shloka:
     src = Source(key="test-src", kind="text", name="Test corpus", license="CC0-1.0")
     session.add(src)
     session.flush()
-    s = Shloka(slug="test-shloka", title="Test", devanagari="तत् सवितुर्", iast="tat savitur",
-               source_id=src.id, source_ref="T 1.1")  # fmt: skip
+    s = Shloka(
+        slug="test-shloka",
+        title="Test",
+        devanagari="तत् सवितुर्",
+        iast="tat savitur",
+        source_id=src.id,
+        source_ref="T 1.1",
+    )
     for i, (iast, deva) in enumerate([("tat", "तत्"), ("savitur", "सवितुर्")]):
         w = ShlokaWord(position=i, surface_iast=iast, surface_devanagari=deva)
         w.analyses.append(WordAnalysis(position=0, pada_iast=iast, lemma=iast, morphology={}))

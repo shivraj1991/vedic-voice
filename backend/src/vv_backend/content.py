@@ -83,7 +83,7 @@ ANALYSIS_EDITABLE = {
 }
 
 
-def _require(actor: Actor, *roles: Role) -> None:
+def require_role(actor: Actor, *roles: Role) -> None:
     if actor.role not in roles:
         raise PermissionDenied(f"role {actor.role} may not do this")
 
@@ -187,7 +187,7 @@ def _shloka(session: Session, slug: str) -> Shloka:
 
 def update_shloka(session: Session, actor: Actor, slug: str, changes: dict[str, Any]) -> Shloka:
     """Edit shloka fields. A verified shloka becomes unverified (DB trigger)."""
-    _require(actor, Role.ADMIN, Role.ADVISOR)
+    require_role(actor, Role.ADMIN, Role.ADVISOR)
     _validate(changes, SHLOKA_EDITABLE)
     shloka = _shloka(session, slug)
     was_verified = shloka.verified
@@ -209,7 +209,7 @@ def update_shloka(session: Session, actor: Actor, slug: str, changes: dict[str, 
 
 def verify_shloka(session: Session, actor: Actor, slug: str, notes: str | None = None) -> Shloka:
     """Mark a shloka verified. Advisors only."""
-    _require(actor, Role.ADVISOR)
+    require_role(actor, Role.ADVISOR)
     shloka = _shloka(session, slug)
     if shloka.verified:
         return shloka
@@ -227,7 +227,7 @@ def verify_shloka(session: Session, actor: Actor, slug: str, notes: str | None =
 def update_word_analysis(
     session: Session, actor: Actor, analysis_id: uuid.UUID, changes: dict[str, Any]
 ) -> WordAnalysis:
-    _require(actor, Role.ADMIN, Role.ADVISOR)
+    require_role(actor, Role.ADMIN, Role.ADVISOR)
     _validate(changes, ANALYSIS_EDITABLE)
     analysis = session.get(WordAnalysis, analysis_id)
     if analysis is None:
@@ -250,7 +250,7 @@ def update_word_analysis(
 
 
 def verify_word_analysis(session: Session, actor: Actor, analysis_id: uuid.UUID) -> WordAnalysis:
-    _require(actor, Role.ADVISOR)
+    require_role(actor, Role.ADVISOR)
     analysis = session.get(WordAnalysis, analysis_id)
     if analysis is None:
         raise NotFound(str(analysis_id))
@@ -269,7 +269,11 @@ __all__ = [
     "NotFound",
     "PermissionDenied",
     "Role",
+    "admin_get_shloka",
+    "admin_list_shlokas",
     "audit",
+    "list_audit",
+    "require_role",
     "get_verified_shloka",
     "list_verified_shlokas",
     "update_shloka",
@@ -277,3 +281,61 @@ __all__ = [
     "verify_shloka",
     "verify_word_analysis",
 ]
+
+
+# --- admin / advisor reads (everything, including unverified drafts) -------------
+
+
+def admin_list_shlokas(session: Session) -> list[dict[str, Any]]:
+    rows = session.execute(
+        select(Shloka.slug, Shloka.title, Shloka.verified, Shloka.verified_at, Shloka.updated_at)
+        .order_by(Shloka.title)
+    )  # fmt: skip
+    return [dict(r._mapping) for r in rows]
+
+
+def admin_get_shloka(session: Session, slug: str) -> dict[str, Any]:
+    shloka = session.scalar(
+        select(Shloka)
+        .where(Shloka.slug == slug)
+        .options(
+            selectinload(Shloka.words).selectinload(ShlokaWord.analyses),
+            selectinload(Shloka.source),
+        )  # fmt: skip
+    )
+    if shloka is None:
+        raise NotFound(slug)
+    return {
+        "slug": shloka.slug, "title": shloka.title, "devanagari": shloka.devanagari,
+        "iast": shloka.iast, "translation": shloka.translation, "source_ref": shloka.source_ref,
+        "source": {"key": shloka.source.key, "name": shloka.source.name,
+                   "license": shloka.source.license, "url": shloka.source.url},
+        "verified": shloka.verified, "verified_by": shloka.verified_by,
+        "verified_at": shloka.verified_at, "review_notes": shloka.review_notes,
+        "updated_at": shloka.updated_at,
+        "words": [
+            {"id": w.id, "position": w.position, "surface_iast": w.surface_iast,
+             "surface_devanagari": w.surface_devanagari,
+             "analyses": [
+                 {"id": a.id, "position": a.position, "pada_iast": a.pada_iast, "lemma": a.lemma,
+                  "morphology": a.morphology, "meaning": a.meaning, "explanation": a.explanation,
+                  "analysis_tool": a.analysis_tool, "verified": a.verified,
+                  "verified_by": a.verified_by}
+                 for a in w.analyses
+             ]}
+            for w in shloka.words
+        ],
+    }  # fmt: skip
+
+
+def list_audit(
+    session: Session, entity_id: uuid.UUID | None, limit: int = 100
+) -> list[dict[str, Any]]:
+    q = select(ContentAudit).order_by(ContentAudit.id.desc()).limit(limit)
+    if entity_id:
+        q = q.where(ContentAudit.entity_id == entity_id)
+    return [
+        {"id": a.id, "actor": a.actor_clerk_id, "entity": a.entity, "entity_id": a.entity_id,
+         "action": a.action, "diff": a.diff, "at": a.at}
+        for a in session.scalars(q)
+    ]  # fmt: skip

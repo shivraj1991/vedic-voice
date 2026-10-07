@@ -14,8 +14,12 @@ def test_upgrade_downgrade_roundtrip(fresh_db):
     migrate(engine, "base", down=True)
     with engine.connect() as conn:
         assert set(inspect(conn).get_table_names()) <= {"alembic_version"}
-        assert conn.execute(text("SELECT count(*) FROM pg_views WHERE viewname = "
-                                 "'verified_shlokas'")).scalar() == 0  # fmt: skip
+        assert (
+            conn.execute(
+                text("SELECT count(*) FROM pg_views WHERE viewname = 'verified_shlokas'")
+            ).scalar()
+            == 0
+        )
     migrate(engine)
 
 
