@@ -224,7 +224,6 @@ Wikisource and its license.
 | 2026-10-07 | Proceed with GRETIL texts for now; replace with a concrete commercially usable source later (see Future work) | Product owner decision; unblocks Milestone 1 seed |
 | 2026-10-07 | Recommended tooling: Vidyut primary + INRIA Heritage as second opinion; ByT5-Sanskrit (neural) not used for content | Comparison in `data/spike/RESULTS.md`; neural tagger conflicts with the rule-based grammar rule |
 | 2026-10-07 | Console must group/search analysis candidates and allow free entry | Up to 76 readings per common word; Vedic forms (dhīmahi, pracodayāt) unknown to the lexicon |
-
 | 2026-10-07 | Content rules enforced in the DB too: triggers reset `verified` on edits (word edits reset the shloka; derived `expected_phonemes` does not), CHECK verified ⇒ verified_by/at, `content_audit` append-only, learners read `verified_shlokas` | Defense in depth: no code path can forget the rule; role checks + audit stay in `vv_backend.content` (DB cannot see Clerk roles) |
 | 2026-10-07 | Seed never overwrites existing shlokas; sources upserted by key | DB is source of truth after seeding |
 | 2026-10-07 | Source wording is never silently corrected; typos/variants go to `review_notes` (e.g. Wikisource *kurū*, *guravai*) | Advisor decides; keeps provenance honest |
