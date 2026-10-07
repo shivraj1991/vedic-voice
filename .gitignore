@@ -35,3 +35,7 @@ web-build/
 .DS_Store
 .idea/
 .vscode/
+
+# Content pipeline data (downloaded, see data/spike/fetch.py)
+data/vendor/
+data/spike/out/

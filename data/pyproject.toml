@@ -1,0 +1,34 @@
+[project]
+name = "vv-content"
+version = "0.1.0"
+description = "Vedic Voice content pipeline: deterministic word split + morphology candidates for advisor review"
+requires-python = ">=3.12"
+dependencies = [
+    # MIT; Rust Sanskrit toolkit (segmenter, lexicon, Paninian grammar) from ambuda.org.
+    # Spike dependency (Milestone 0b) - pending product-owner approval as a major dependency.
+    "vidyut==0.4.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vv_content"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

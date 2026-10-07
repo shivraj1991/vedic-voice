@@ -148,7 +148,14 @@ cd scoring && uv run python -m spike.fetch      # model (pinned, sha256) + Su-ś
 cd scoring && uv run python -m spike.eval       # → spike/out/{summary.md,report.json,review.html}
 cd scoring && uv run python -m spike.score_file --text "<IAST or Devanagari>" --reference ref.m4a attempt.m4a
 cd scoring && uv run python -m spike.eval --help
-# Cloud sessions: .claude/hooks/session-start.sh runs uv sync + spike.fetch --skip-fp32 (needs huggingface.co)
+# Cloud sessions: .claude/hooks/session-start.sh syncs scoring/ and data/ and fetches their
+# spike data (needs huggingface.co, github.com release downloads, gretil.sub.uni-goettingen.de)
+
+# data / content pipeline (Milestone 0b)
+cd data && uv sync && uv run pytest && uv run ruff check . && uv run ruff format --check .
+cd data && uv run python -m spike.fetch --dcs   # Vidyut data, GRETIL texts, DCS gold → data/vendor/
+cd data && uv run python -m spike.eval_dcs      # split/lexicon accuracy vs DCS
+cd data && uv run python -m spike.draft         # draft analyses for advisor review
 
 # backend (Milestone 2)
 cd backend && uv sync && uv run pytest
@@ -163,7 +170,7 @@ cd app && npm install && npm test && npx expo start
 | # | Milestone | Status |
 |---|---|---|
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
-| 0b | Sanskrit tooling spike (sandhi/morphology) | Not started |
+| 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: Vidyut dependency approval, INRIA Heritage eval (Vedic forms) |
 | 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Not started |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Not started |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
@@ -195,6 +202,9 @@ Wikisource and its license.
 | 2026-10-06 | Su-śrotā dataset (IISc, CC BY 4.0) as the main scoring test set | Many consented speakers per text, incl. Guru Brahmā, BG 2.47, RV 1.1.1. Commons recordings kept in manifest (upload.wikimedia.org rate-limited the dev sandbox) |
 | 2026-10-06 | GRETIL Ṛgveda e-text is CC BY-NC-SA (non-commercial) | OK for spike/free MVP; paid app or B2B API needs another source for Gayatri / Mahāmṛtyuñjaya text (see `data/sources.yaml`) |
 | 2026-10-06 | Single dropped sounds are down-weighted; "word missing" only when clearly worse than the reference | Spike: CTC model skips short vowels even in good recitations; raw deletion flags caused ~40% false flags on clean audio |
+| 2026-10-07 | Grammar pipeline: split from corpus pada-pāṭha when available, else Vidyut (conservative); morphology = all Vidyut lexicon readings as candidates; advisor picks or enters | Spike vs DCS: 20% of sentences split exactly, 87% of noun readings among candidates, 65% top-1 → usable as proposals only |
+| 2026-10-07 | Vidyut (MIT) proposed as content-pipeline dependency — **pending product-owner approval** | Only maintained open Pāṇinian toolkit installable here; offline only, never per learner request |
+| 2026-10-07 | Console must group/search analysis candidates and allow free entry | Up to 76 readings per common word; Vedic forms (dhīmahi, pracodayāt) unknown to the lexicon |
 
 ## Schema draft (implemented in Milestone 1)
 
