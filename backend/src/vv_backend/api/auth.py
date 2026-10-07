@@ -5,7 +5,8 @@ leeway for clock skew), `iss` = our Clerk instance, `azp` in our authorized
 parties (tokens from the native app carry no `azp` because there is no browser
 Origin; they are accepted only when CLERK_ALLOW_MISSING_AZP=true), `sub` present.
 The role comes only from the verified token's `role` claim (Clerk session-token
-template: "role": "{{user.public_metadata.role}}"), never from request data. Unknown or missing roles mean "learner".
+template: "role": "{{user.public_metadata.role}}"), never from request data.
+Unknown or missing roles mean "learner".
 
 Tokens are never logged.
 """
