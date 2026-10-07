@@ -24,9 +24,10 @@ jobs:
     env:
       DATABASE_URL_MIGRATIONS: ${{ secrets.NEON_MIGRATIONS_URL }}
     steps:
+      # Checkout first: every run step uses working-directory backend/ (defaults above).
+      - uses: actions/checkout@v4
       - name: Require secret
         run: test -n "$DATABASE_URL_MIGRATIONS" || (echo "Set NEON_MIGRATIONS_URL secret" && exit 1)
-      - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
       - run: uv run alembic upgrade head
