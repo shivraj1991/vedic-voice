@@ -178,7 +178,7 @@ cd app && npm install && npm test && npx expo start
 |---|---|---|
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
-| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16 and in CI; **Neon run via GitHub Actions** once secrets `NEON_TEST_DIRECT_URL` / `NEON_MIGRATIONS_URL` are set (cloud sandbox cannot reach Postgres port 5432) |
+| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16 and in CI. **Neon test branch migrated (0002 head) and seeded** via the `neon-migrate` workflow, 2026-10-07; CI suite passes on Neon except the `vv_app` least-privilege check (console-created role → recreate with SQL, see `backend/README.md`) |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); real JWKS fetched and forged tokens rejected (`VV_LIVE_CLERK=1 pytest tests/test_clerk_live.py`). Still to check with a real sign-in: `role` claim + native `azp`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
 | 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
@@ -240,6 +240,7 @@ Wikisource and its license.
 | 2026-10-07 | Active reference recording must be advisor-verified; low match (< 0.88) returns "couldn't match your chant" instead of word feedback | Reference is content; spike threshold |
 | 2026-10-07 | Neon is reached from GitHub Actions (secrets), not from the Claude cloud sandbox | Sandbox egress is HTTPS-only (port 5432 blocked); keeps DB passwords out of chat and the repo |
 | 2026-10-07 | Tests run on real Postgres (local throwaway cluster or Neon branch via `DATABASE_URL_TEST`), not SQLite | Triggers/view/constraints are part of the rules under test |
+| 2026-10-07 | Create `vv_app` with SQL, not the Neon console; migration 0002 warns and a CI test fails if it can write all data | Neon console roles join `neon_superuser` (write-all), which defeats the narrow grants |
 
 ## Schema (implemented in Milestone 1; source of truth: `backend/src/vv_backend/db/models.py`)
 

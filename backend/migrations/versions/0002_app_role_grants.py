@@ -1,7 +1,9 @@
 """least-privilege grants for the application role
 
-The API/Lambda connects as `vv_app` (create it in the Neon console; it must
-not own the schema). Migrations run as the owner role via
+The API/Lambda connects as `vv_app`. Create it with SQL as the owner role
+(`CREATE ROLE vv_app LOGIN PASSWORD '...'`), not in the Neon console: console
+roles join `neon_superuser`, which can write all data, so these narrow grants
+would not limit them. It must not own the schema. Migrations run as the owner role via
 DATABASE_URL_MIGRATIONS. If `vv_app` does not exist yet (local dev), this
 migration is a no-op; re-run `alembic downgrade 0001 && alembic upgrade head`
 after creating it.
@@ -51,6 +53,9 @@ def upgrade() -> None:
         GRANT SELECT, INSERT ON content_audit TO {APP_ROLE};
         GRANT USAGE ON SEQUENCE content_audit_id_seq TO {APP_ROLE};
         GRANT SELECT ON sources, verified_shlokas TO {APP_ROLE};
+        IF pg_has_role('{APP_ROLE}', 'pg_write_all_data', 'USAGE') THEN
+            RAISE WARNING '{APP_ROLE} can write all data (Neon console role?); recreate with SQL';
+        END IF;
     """)
     )
 

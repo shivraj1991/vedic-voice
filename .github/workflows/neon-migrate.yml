@@ -10,6 +10,10 @@ on:
         description: "Also load the initial seed (idempotent, never overwrites)"
         type: boolean
         default: true
+      regrant:
+        description: "Re-apply vv_app grants (re-runs migration 0002; use after recreating vv_app)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,6 +34,9 @@ jobs:
         run: test -n "$DATABASE_URL_MIGRATIONS" || (echo "Set NEON_MIGRATIONS_URL secret" && exit 1)
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
+      - name: Re-apply vv_app grants (downgrade 0002 only revokes grants)
+        if: inputs.regrant
+        run: uv run alembic downgrade 0001
       - run: uv run alembic upgrade head
       - run: uv run alembic current
       - name: Seed
@@ -37,3 +44,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.NEON_MIGRATIONS_URL }}
         run: uv run python -m vv_backend.seed
+      - name: Check vv_app privileges
+        env:
+          DATABASE_URL: ${{ secrets.NEON_MIGRATIONS_URL }}
+        run: uv run python -m vv_backend.db.check_app_role

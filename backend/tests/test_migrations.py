@@ -3,6 +3,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from sqlalchemy import inspect, text
 
+from vv_backend.db.check_app_role import problems
 from vv_backend.db.models import Base
 
 from .conftest import migrate
@@ -50,7 +51,31 @@ def test_app_role_is_least_privilege(fresh_db):
                 text("SELECT has_table_privilege('vv_app', :t, :p)"), {"t": table, "p": priv}
             ).scalar()
 
+    with engine.connect() as conn:
+        write_all = conn.execute(
+            text("SELECT pg_has_role('vv_app', 'pg_write_all_data', 'USAGE')")
+        ).scalar()
+    assert not write_all, (
+        "vv_app inherits pg_write_all_data (a Neon console role is in neon_superuser); "
+        "recreate it with SQL as the owner role, see backend/README.md"
+    )
     assert can("UPDATE", "shlokas") and can("INSERT", "attempts")
     assert can("INSERT", "content_audit") and can("SELECT", "verified_shlokas")
     assert not can("UPDATE", "content_audit") and not can("DELETE", "content_audit")
     assert not can("INSERT", "sources")
+
+    # regrant path of the neon-migrate workflow: downgrade 0002 + upgrade restores grants
+    migrate(engine, "0001", down=True)
+    with engine.connect() as conn:
+        assert any("lacks" in p for p in problems(conn))
+    migrate(engine)
+    with engine.connect() as conn:
+        assert problems(conn) == []
+        # GRANT is transactional: simulate a Neon console role, then roll back
+        try:
+            conn.execute(text("GRANT pg_write_all_data TO vv_app"))
+        except Exception:  # Neon owner may lack ADMIN on pg_write_all_data
+            conn.rollback()
+            return
+        assert any("write all data" in p for p in problems(conn))
+        conn.rollback()
