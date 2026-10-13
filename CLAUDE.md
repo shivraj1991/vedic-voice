@@ -168,8 +168,10 @@ cd backend && VV_LIVE_CLERK=1 uv run pytest tests/test_clerk_live.py   # needs *
 cd backend && uv run python -m vv_backend.devtools init && uv run python -m vv_backend.devtools token --role advisor
 #   simulated Clerk tokens for local dev; see backend/README.md (refused when VV_ENV=prod)
 
-# app (Milestone 3)
-cd app && npm install && npm test && npx expo start
+# app (Milestone 3b console; Milestone 3 learner screens)
+cd app && npm install && npm run typecheck && npx eslint . && npm run format && npm test
+cd app && EXPO_PUBLIC_API_URL=http://localhost:8000 EXPO_PUBLIC_DEV_AUTH=1 npm run web   # console, simulated tokens
+cd app && npx expo export -p web     # production web build; see app/README.md for Clerk/R2 setup
 ```
 
 ## Milestones
@@ -178,10 +180,10 @@ cd app && npm install && npm test && npx expo start
 |---|---|---|
 | 0 | Pronunciation scoring spike (+ local review page to listen to test recordings) | Done (spike) — see `scoring/spike/RESULTS.md`. Open: Commons recordings (rate-limited), vowel-length accuracy, advisor labels |
 | 0b | Sanskrit tooling spike (sandhi/morphology) | Done (spike) — see `data/spike/RESULTS.md`. Open: INRIA Heritage eval (Vedic forms) |
-| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16 and in CI. **Neon test branch migrated (0002 head) and seeded** via the `neon-migrate` workflow, 2026-10-07; CI suite passes on Neon except the `vv_app` least-privilege check (console-created role → recreate with SQL, see `backend/README.md`) |
+| 1 | Data model + migrations + seed (10 shlokas, verified flag, sources) | Done — 9/10 shlokas seeded (unverified); *Sarve bhavantu* awaits an open-corpus source. Migrations tested on local Postgres 16 and in CI. **Neon test branch migrated (0002 head) and seeded** via the `neon-migrate` workflow; `vv_app` recreated with SQL and re-granted, privilege check OK (2026-10-09); CI green on Neon |
 | 2 | Backend API + Clerk auth (+ admin/advisor routes) | Done with simulated tokens (56 tests). Clerk dev instance configured (`backend/config/clerk.dev.public.env`); real JWKS fetched and forged tokens rejected (`VV_LIVE_CLERK=1 pytest tests/test_clerk_live.py`). Still to check with a real sign-in: `role` claim + native `azp`. Open: R2 buckets+keys, scoring Lambda service, API Gateway throttling + deploy |
 | 3 | Mobile app: sign-in → listen → record → feedback → meaning | Not started |
-| 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Not started |
+| 3b | Admin/Advisor console (recordings, shlokas, review, word labels) | Done (web + phone code; 36 app tests; e2e in Chromium against the real API with simulated tokens; Clerk web sign-in renders). Open: real Clerk sign-in with `role` claim, R2 (upload/playback), native dev build, hosting the web console |
 | 4 | Progress tracking | Not started |
 
 Initial 10 shlokas: Gayatri (RV 3.62.10), Mahāmṛtyuñjaya (RV 7.59.12),
@@ -241,6 +243,12 @@ Wikisource and its license.
 | 2026-10-07 | Neon is reached from GitHub Actions (secrets), not from the Claude cloud sandbox | Sandbox egress is HTTPS-only (port 5432 blocked); keeps DB passwords out of chat and the repo |
 | 2026-10-07 | Tests run on real Postgres (local throwaway cluster or Neon branch via `DATABASE_URL_TEST`), not SQLite | Triggers/view/constraints are part of the rules under test |
 | 2026-10-07 | Create `vv_app` with SQL, not the Neon console; migration 0002 warns and a CI test fails if it can write all data | Neon console roles join `neon_superuser` (write-all), which defeats the narrow grants |
+| 2026-10-13 | Console: Clerk `<SignIn/>` on web, Clerk hosted sign-in (`useHostedAuth`) on iOS/Android; `@clerk/expo` (the old `@clerk/clerk-expo` is deprecated) | Every sign-in method from the Clerk dashboard without custom auth UI |
+| 2026-10-13 | Dev sign-in with pasted simulated tokens: dev builds only, explicit `EXPO_PUBLIC_DEV_AUTH=1`, never when a Clerk key is set, memory-only | Build and test the console without Clerk; backend refuses these tokens in prod |
+| 2026-10-13 | Console role gating from `GET /me` (server-verified token), not from client-side claims | One source of truth; the API enforces roles regardless |
+| 2026-10-13 | Advisor must explicitly choose a reading (stored as `morphology.chosen`) and add a meaning before verifying a word; the analyser proposal alone cannot be verified | Proposal is right only ~65% (spike); verifying must mean reviewed |
+| 2026-10-13 | No data-fetching/UI libraries in the app: small `useResource` hook + StyleSheet | Avoid new major dependencies; console is small |
+| 2026-10-13 | `@testing-library/react-native` pinned to 13.x | `expo-router/testing-library` (screen tests) targets 13; 14 changed `render` |
 
 ## Schema (implemented in Milestone 1; source of truth: `backend/src/vv_backend/db/models.py`)
 

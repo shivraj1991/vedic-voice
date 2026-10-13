@@ -57,6 +57,8 @@ def test_analysis_edit_and_verify(api):
     assert api.client.post(f"/admin/word-analyses/{aid}/verify", headers=ADVISOR).json()["verified"]
     bad = api.client.patch(f"/admin/word-analyses/{aid}", headers=ADMIN, json={"morphology": "x"})
     assert bad.status_code == 422
+    listed = api.client.get("/admin/shlokas", headers=ADMIN).json()
+    assert (listed[0]["analyses"], listed[0]["analyses_verified"]) == (1, 1)
 
 
 def test_recording_lifecycle(api):
@@ -129,3 +131,22 @@ def test_word_labels_upsert(api):
     )
     assert api.sql("SELECT count(*), bool_and(ok) FROM word_labels").one() == (1, True)
     assert api.client.put("/admin/word-labels", headers=auth(), json=body).status_code == 403
+
+
+def test_recording_detail_for_labelling(api):
+    sid = add_shloka(api)
+    aid = api.sql("SELECT id FROM audio_assets WHERE shloka_id = :s", s=sid).scalar()
+    wid = api.sql(
+        "SELECT id FROM shloka_words WHERE shloka_id = :s AND position = 1", s=sid
+    ).scalar()
+    label = {"audio_asset_id": str(aid), "shloka_word_id": str(wid), "ok": False,
+             "issue_code": "vowel_length_short", "note": "savitūr"}  # fmt: skip
+    api.client.put("/admin/word-labels", headers=ADVISOR, json=label)
+    mine = api.client.get(f"/admin/audio/{aid}", headers=ADVISOR).json()
+    assert mine["shloka_slug"] == "tat-savitur"
+    assert [w["surface_iast"] for w in mine["words"]] == ["tat", "savitur"]
+    assert mine["labels"] == [{"shloka_word_id": str(wid), "ok": False,
+                               "issue_code": "vowel_length_short", "note": "savitūr"}]  # fmt: skip
+    # labels are per labeler: another staff member starts from a clean sheet
+    assert api.client.get(f"/admin/audio/{aid}", headers=ADMIN).json()["labels"] == []
+    assert api.client.get(f"/admin/audio/{aid}", headers=auth()).status_code == 403

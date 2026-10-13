@@ -221,6 +221,8 @@ class AudioAsset(Base):
     is_active_reference: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     verified: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     created_at: Mapped[dt.datetime] = _created()
+    # joined: every asset view shows its shloka's slug without an extra round trip
+    shloka: Mapped[Shloka] = relationship(lazy="joined")
 
 
 class AudioWordMark(Base):

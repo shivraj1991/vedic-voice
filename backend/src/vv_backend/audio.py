@@ -110,3 +110,24 @@ def upsert_label(
             set_={"ok": ok, "issue_code": issue_code, "note": note},
         )
     )
+
+
+def asset_detail(session: Session, actor: Actor, asset_id: uuid.UUID) -> dict[str, Any]:
+    """A recording with its shloka's words and this labeler's labels (labelling screen)."""
+    require_role(actor, Role.ADMIN, Role.ADVISOR)
+    asset = get_asset(session, asset_id)
+    words = session.scalars(
+        select(ShlokaWord).where(ShlokaWord.shloka_id == asset.shloka_id)
+        .order_by(ShlokaWord.position)
+    )  # fmt: skip
+    labels = session.scalars(
+        select(WordLabel).where(
+            WordLabel.audio_asset_id == asset_id, WordLabel.labeled_by == actor.clerk_id
+        )
+    )
+    return {
+        "words": [{"id": w.id, "position": w.position, "surface_iast": w.surface_iast,
+                   "surface_devanagari": w.surface_devanagari} for w in words],
+        "labels": [{"shloka_word_id": lb.shloka_word_id, "ok": lb.ok,
+                    "issue_code": lb.issue_code, "note": lb.note} for lb in labels],
+    }  # fmt: skip

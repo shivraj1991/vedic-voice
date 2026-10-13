@@ -75,7 +75,8 @@ def asset_upload_url(body: AssetUploadUrlIn, _: Staff, storage: AudioStorage,
 
 
 def _asset_view(a) -> dict:
-    return {"id": a.id, "shloka_id": a.shloka_id, "kind": a.kind, "r2_key": a.r2_key,
+    return {"id": a.id, "shloka_id": a.shloka_id, "shloka_slug": a.shloka.slug,
+            "shloka_title": a.shloka.title, "kind": a.kind, "r2_key": a.r2_key,
             "license": a.license, "attribution": a.attribution, "reciter": a.reciter,
             "source_url": a.source_url, "duration_ms": a.duration_ms, "verified": a.verified,
             "is_active_reference": a.is_active_reference, "created_at": a.created_at}  # fmt: skip
@@ -95,6 +96,13 @@ def register_audio(body: AssetIn, staff: Staff, db: DB, storage: AudioStorage) -
 @router.get("/audio")
 def list_audio(_: Staff, db: DB, shloka: str | None = Query(default=None, max_length=80)) -> list:
     return [_asset_view(a) for a in audio.list_assets(db, shloka)]
+
+
+@router.get("/audio/{asset_id}")
+def get_audio(asset_id: uuid.UUID, staff: Staff, db: DB) -> dict:
+    return _asset_view(audio.get_asset(db, asset_id)) | audio.asset_detail(
+        db, staff.actor, asset_id
+    )
 
 
 @router.get("/audio/{asset_id}/play-url")
