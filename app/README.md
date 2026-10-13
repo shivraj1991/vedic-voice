@@ -27,11 +27,11 @@ npm start                   # Expo dev server (phone: development build, see bel
 
 `.env` (only public values; it is gitignored anyway):
 
-| Variable | Value |
-|---|---|
-| `EXPO_PUBLIC_API_URL` | backend URL, e.g. `http://localhost:8000` |
-| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | from `backend/config/clerk.dev.public.env` |
-| `EXPO_PUBLIC_DEV_AUTH` | `1` = sign in by pasting a simulated token (dev builds only, and only without a Clerk key) |
+| Variable                            | Value                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| `EXPO_PUBLIC_API_URL`               | backend URL, e.g. `http://localhost:8000`                                                  |
+| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | from `backend/config/clerk.dev.public.env`                                                 |
+| `EXPO_PUBLIC_DEV_AUTH`              | `1` = sign in by pasting a simulated token (dev builds only, and only without a Clerk key) |
 
 ### Local console without Clerk (simulated tokens)
 
