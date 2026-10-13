@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Vedic Voice",
+    "slug": "vedic-voice",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.vedicvoice"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "app.vedicvoice"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "@clerk/expo",
+      "expo-secure-store",
+      "expo-audio",
+      "expo-web-browser"
+    ],
+    "scheme": "vedicvoice",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

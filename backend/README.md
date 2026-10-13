@@ -79,9 +79,9 @@ invoked as root) and skip if no PostgreSQL binaries are installed.
 | `GET /shlokas/{slug}/reference-audio` | learner | signed GET (≤15 min) + word timings |
 | `POST /recordings/upload-url` | learner | signed PUT to `rec/tmp/{user}/{id}.m4a` (server-chosen key) |
 | `POST /score-pronunciation` | learner | own key only; HEAD size/type check; per-user hourly limit; tmp deleted, consented copy kept |
-| `GET/PATCH /admin/shlokas[/{slug}]`, `PATCH /admin/word-analyses/{id}` | admin, advisor | edits reset verified, audited |
+| `GET/PATCH /admin/shlokas[/{slug}]`, `PATCH /admin/word-analyses/{id}` | admin, advisor | list includes review progress; edits reset verified, audited |
 | `POST /admin/shlokas/{slug}/verify`, `POST /admin/word-analyses/{id}/verify`, `POST /admin/audio/{id}/verify` | **advisor** | |
-| `POST /admin/audio/upload-url`, `POST /admin/audio`, `GET /admin/audio`, `GET /admin/audio/{id}/play-url`, `POST /admin/audio/{id}/activate` | admin, advisor | only verified references can be activated |
+| `POST /admin/audio/upload-url`, `POST /admin/audio`, `GET /admin/audio`, `GET /admin/audio/{id}` (+ words and your labels), `GET /admin/audio/{id}/play-url`, `POST /admin/audio/{id}/activate` | admin, advisor | only verified references can be activated |
 | `PUT /admin/word-labels`, `GET /admin/audit` | admin, advisor | ground-truth labels; audit log |
 
 Auth: Clerk session JWT (RS256 via JWKS), checks `exp`/`nbf`, `iss`, `azp`; role from the

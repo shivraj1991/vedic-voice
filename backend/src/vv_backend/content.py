@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import Column, DateTime, MetaData, String, Table, Text, select
+from sqlalchemy import Column, DateTime, MetaData, String, Table, Text, func, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Session, selectinload
 
@@ -287,8 +287,22 @@ __all__ = [
 
 
 def admin_list_shlokas(session: Session) -> list[dict[str, Any]]:
+    """All shlokas with review progress (one query: the console's home screen)."""
+    analyses = (
+        select(
+            ShlokaWord.shloka_id,
+            func.count(WordAnalysis.id).label("analyses"),
+            func.count(WordAnalysis.id).filter(WordAnalysis.verified).label("analyses_verified"),
+        )
+        .join(WordAnalysis, WordAnalysis.shloka_word_id == ShlokaWord.id)
+        .group_by(ShlokaWord.shloka_id)
+        .subquery()
+    )
     rows = session.execute(
-        select(Shloka.slug, Shloka.title, Shloka.verified, Shloka.verified_at, Shloka.updated_at)
+        select(Shloka.slug, Shloka.title, Shloka.verified, Shloka.verified_at, Shloka.updated_at,
+               func.coalesce(analyses.c.analyses, 0).label("analyses"),
+               func.coalesce(analyses.c.analyses_verified, 0).label("analyses_verified"))
+        .outerjoin(analyses, analyses.c.shloka_id == Shloka.id)
         .order_by(Shloka.title)
     )  # fmt: skip
     return [dict(r._mapping) for r in rows]

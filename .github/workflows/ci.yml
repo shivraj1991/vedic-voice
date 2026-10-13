@@ -80,3 +80,28 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run pytest -q
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx eslint . --max-warnings 0
+      - run: npm run format
+      - run: npm test -- --ci
+      - name: Web build (console)
+        env:
+          EXPO_OFFLINE: "1"
+          EXPO_PUBLIC_API_URL: https://api.example.invalid
+          # public by design (backend/config/clerk.dev.public.env)
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhjaXRpbmctbWFuLTQzMzEuY2xlcmsuYWNjb3VudHMuZGV2JA
+        run: npx expo export -p web --output-dir dist
